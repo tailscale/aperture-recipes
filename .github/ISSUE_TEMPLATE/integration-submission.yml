@@ -6,7 +6,16 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for submitting an integration. This form captures the same information as the PR-based submission template. After review, a maintainer may convert this into a PR on your behalf or ask you to open one.
+        Thanks for submitting an integration! This form mirrors the [integration template](https://github.com/tailscale/aperture-catalog/blob/main/templates/integration.md). After review, a maintainer may convert this into a PR on your behalf or ask you to open one.
+
+        Only **Integration name**, **Integration type**, and **Summary** are required. Fill in as much as you can — the review team will work with you on any gaps.
+
+        **Helpful references:**
+        - [Aperture documentation](https://tailscale.com/docs/aperture) — product overview and getting started
+        - [Configuration reference](https://tailscale.com/docs/aperture/configuration) — grants, hooks, providers, and quotas
+        - [Guardrails guide](https://tailscale.com/docs/aperture/guardrails) — conceptual guide to pre-request hooks
+        - [Build a custom webhook](https://tailscale.com/docs/aperture/how-to/build-custom-webhook) — step-by-step hook tutorial
+        - [Template README](https://github.com/tailscale/aperture-catalog/blob/main/templates/README.md) — section-by-section guidance
 
   - type: input
     id: integration-name
@@ -22,43 +31,52 @@ body:
       label: Provider / company name
       placeholder: "for example, Acme Corp"
     validations:
-      required: true
+      required: false
 
   - type: input
     id: provider-url
     attributes:
       label: Provider URL
-      description: "Required. URL for the provider's homepage."
       placeholder: "https://example.com"
     validations:
-      required: true
+      required: false
 
   - type: dropdown
     id: integration-type
     attributes:
       label: Integration type
-      description: Primary type. If your integration supports multiple event types (for example, both pre-request and post-response), select the primary type here. Specify secondary types as `additional_types` in your PR's frontmatter.
+      description: "Primary type. See the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for how each type is configured."
       options:
-        - Pre-request hook (synchronous)
-        - Post-response hook (fire-and-forget)
+        - Pre-request hook
+        - Post-response hook
         - Provider
-        - Tool / platform
+        - Tool
     validations:
       required: true
+
+  - type: input
+    id: additional-types
+    attributes:
+      label: Additional types
+      description: "If this integration supports multiple event types through the same endpoint, list secondary types here. Leave blank for single-type integrations."
+      placeholder: "for example, post_response_hook"
+    validations:
+      required: false
+
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+      description: "Comma-separated lowercase hyphenated tags for categorization. See the [template README](https://github.com/tailscale/aperture-catalog/blob/main/templates/README.md#frontmatter-tags) for common values."
+      placeholder: "guardrail, security, pii-redaction"
+    validations:
+      required: false
 
   - type: textarea
     id: summary
     attributes:
       label: Summary
-      description: One-paragraph description of what this integration does.
-    validations:
-      required: true
-
-  - type: textarea
-    id: problem-statement
-    attributes:
-      label: Problem statement
-      description: What problem does this solve for Aperture users?
+      description: "What this integration does and why an Aperture user would want it. Include what problem it solves and what gap it fills."
     validations:
       required: true
 
@@ -66,7 +84,8 @@ body:
     id: prerequisites
     attributes:
       label: Prerequisites
-      description: What does the user need before setting this up?
+      description: "What the user needs before setting this up. Include requirements from both the [Aperture](https://tailscale.com/docs/aperture) side (running instance, version, etc.) and the external service side (account, API key, endpoint, etc.)."
+      render: markdown
     validations:
       required: false
 
@@ -74,29 +93,66 @@ body:
     id: setup
     attributes:
       label: Setup and configuration
-      description: Step-by-step instructions for installing and configuring the integration.
+      description: "Step-by-step instructions to configure the external service. Number each step, start with an imperative verb, and include working examples inline (sample requests, expected responses, config snippets)."
       render: markdown
     validations:
-      required: true
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        ### Aperture configuration
+
+        **Hook integrations** (`pre_request_hook`, `post_response_hook`): fill in *Hook definition* and *Grant wiring* below. See the [hook configuration reference](https://tailscale.com/docs/aperture/configuration#hooks) for the full field list.
+
+        **Provider and tool integrations**: skip *Hook definition*, and use *Grant wiring* to show your [grant configuration](https://tailscale.com/docs/aperture/configuration#grants).
 
   - type: textarea
-    id: example-usage
+    id: hook-definition
     attributes:
-      label: Example usage / code snippets
-      description: Working examples, sample configs, or code. Use fenced code blocks. Strongly recommended — concrete examples are expected for all submissions per the quality bar.
+      label: Hook definition
+      description: "Hook integrations only. The hook entry for the [`hooks` map](https://tailscale.com/docs/aperture/configuration#hooks) in your Aperture config file. Include the endpoint URL, recommended timeout, fail policy, and any integration-specific values."
       render: markdown
     validations:
       required: false
 
   - type: textarea
-    id: aperture-config
+    id: grant-wiring
     attributes:
-      label: Hook definition and grant wiring
+      label: Grant wiring
       description: |
-        Required for hook integrations. Optional for provider/tool integrations.
-        For hook integrations: the hook endpoint entry (URL, API key, timeout, fail policy) and grant wiring (send_hooks entry with events and send values).
-        For provider/tool integrations: the relevant Aperture grant configuration.
-        Note: tailnet grants require an explicit `dst` key — omitting it causes the grant to silently apply to nothing.
+        For hook integrations: the `send_hooks` entry that activates the hook. Include only the events and send values this integration needs.
+        For provider/tool integrations: the relevant [grant configuration](https://tailscale.com/docs/aperture/configuration#grants).
+        Note: [tailnet policy grants](https://tailscale.com/kb/1337/acl-syntax#grants) require an explicit `dst` key — omitting it causes the grant to silently apply to nothing. Config-file grants do not use `dst`.
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: hook-response-format
+    attributes:
+      label: Hook response format
+      description: "Pre-request hooks only. What actions your hook returns (allow, block, modify) with example JSON responses. If your hook uses `modify`, note the [cache impact](https://tailscale.com/docs/aperture/configuration#hook-response-format). Leave blank for post-response hooks."
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: verify
+    attributes:
+      label: Verify the integration
+      description: "How to verify the integration is working correctly. Include specific test steps, expected outcomes, and example commands."
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: troubleshooting
+    attributes:
+      label: Troubleshooting
+      description: "Common issues and resolutions. Encouraged for hook integrations where configuration issues are common."
       render: markdown
     validations:
       required: false
@@ -105,31 +161,27 @@ body:
     id: security
     attributes:
       label: Security considerations
-      description: Any security implications of using this integration. Do not include real credentials or tokens.
+      description: "What data leaves the Aperture perimeter, what credentials are required and how they should be stored, whether the hook sees plaintext content. Do not include real credentials or tokens."
     validations:
       required: false
 
   - type: textarea
-    id: testing
+    id: maintenance
     attributes:
-      label: Testing instructions
-      description: How to verify the integration is working correctly. Verification steps are required in the final submission — include specific commands and expected outputs.
+      label: Maintenance and support
+      description: "Who maintains this integration, how to reach them, and where to report bugs."
+      placeholder: |
+        - Maintainer:
+        - Contact:
+        - Issue reporting:
     validations:
       required: false
 
-  - type: input
-    id: maintenance-contact
-    attributes:
-      label: Maintenance contact
-      description: Who maintains this integration and how to reach them (email, GitHub handle, etc.).
-      placeholder: "@github-handle or email"
-    validations:
-      required: true
-
   - type: textarea
-    id: additional-notes
+    id: reference
     attributes:
-      label: Additional notes
-      description: Gotchas, limitations, known issues, or anything else reviewers should know.
+      label: Reference
+      description: "Links to external documentation, guides, or API references. The [Aperture docs](https://tailscale.com/docs/aperture) and [configuration reference](https://tailscale.com/docs/aperture/configuration) are good starting points."
+      render: markdown
     validations:
       required: false
