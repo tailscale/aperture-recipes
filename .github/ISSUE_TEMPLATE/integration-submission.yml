@@ -1,0 +1,135 @@
+name: Integration submission
+description: Submit an Aperture integration for review. Use this if you prefer not to open a pull request directly.
+title: "[Integration] "
+labels: ["integration-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for submitting an integration. This form captures the same information as the PR-based submission template. After review, a maintainer may convert this into a PR on your behalf or ask you to open one.
+
+  - type: input
+    id: integration-name
+    attributes:
+      label: Integration name
+      placeholder: "for example, Acme PII Scrubber"
+    validations:
+      required: true
+
+  - type: input
+    id: provider-name
+    attributes:
+      label: Provider / company name
+      placeholder: "for example, Acme Corp"
+    validations:
+      required: true
+
+  - type: input
+    id: provider-url
+    attributes:
+      label: Provider URL
+      description: "Required. URL for the provider's homepage."
+      placeholder: "https://example.com"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: integration-type
+    attributes:
+      label: Integration type
+      description: Primary type. If your integration supports multiple event types (for example, both pre-request and post-response), select the primary type here. Specify secondary types as `additional_types` in your PR's frontmatter.
+      options:
+        - Pre-request hook (synchronous)
+        - Post-response hook (fire-and-forget)
+        - Provider
+        - Tool / platform
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One-paragraph description of what this integration does.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem-statement
+    attributes:
+      label: Problem statement
+      description: What problem does this solve for Aperture users?
+    validations:
+      required: true
+
+  - type: textarea
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: What does the user need before setting this up?
+    validations:
+      required: false
+
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup and configuration
+      description: Step-by-step instructions for installing and configuring the integration.
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: example-usage
+    attributes:
+      label: Example usage / code snippets
+      description: Working examples, sample configs, or code. Use fenced code blocks. Strongly recommended — concrete examples are expected for all submissions per the quality bar.
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: aperture-config
+    attributes:
+      label: Hook definition and grant wiring
+      description: |
+        Required for hook integrations. Optional for provider/tool integrations.
+        For hook integrations: the hook endpoint entry (URL, API key, timeout, fail policy) and grant wiring (send_hooks entry with events and send values).
+        For provider/tool integrations: the relevant Aperture grant configuration.
+        Note: tailnet grants require an explicit `dst` key — omitting it causes the grant to silently apply to nothing.
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: security
+    attributes:
+      label: Security considerations
+      description: Any security implications of using this integration. Do not include real credentials or tokens.
+    validations:
+      required: false
+
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing instructions
+      description: How to verify the integration is working correctly. Verification steps are required in the final submission — include specific commands and expected outputs.
+    validations:
+      required: false
+
+  - type: input
+    id: maintenance-contact
+    attributes:
+      label: Maintenance contact
+      description: Who maintains this integration and how to reach them (email, GitHub handle, etc.).
+      placeholder: "@github-handle or email"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional notes
+      description: Gotchas, limitations, known issues, or anything else reviewers should know.
+    validations:
+      required: false

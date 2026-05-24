@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Aperture support
+    url: https://tailscale.com/contact/support
+    about: For Aperture bugs, feature requests, or support questions, contact Tailscale support.

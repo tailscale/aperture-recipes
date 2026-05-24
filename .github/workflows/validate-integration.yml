@@ -1,0 +1,125 @@
+name: Validate Integration Submission
+
+on:
+  pull_request:
+    paths:
+      - 'integrations/**'
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate integration files
+    runs-on: ubuntu-latest
+
+    # Skip if the PR was created by a bot (for example, dependabot, the action itself)
+    if: github.actor != 'github-actions[bot]'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed
+        run: |
+          # Find the merge base between HEAD and the PR base branch
+          MERGE_BASE=$(git merge-base HEAD origin/${{ github.event.pull_request.base.ref }})
+
+          # Get list of changed files under integrations/
+          CHANGED=$(git diff --name-only --diff-filter=ACMR "$MERGE_BASE"...HEAD -- 'integrations/')
+
+          if [ -z "$CHANGED" ]; then
+            echo "No integration files changed."
+            echo "has_files=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Changed files:"
+            echo "$CHANGED"
+            echo "has_files=true" >> "$GITHUB_OUTPUT"
+            # Write to file for multi-line output
+            echo "$CHANGED" > /tmp/changed_files.txt
+          fi
+
+      - name: Check org membership
+        id: membership
+        if: steps.changed.outputs.has_files == 'true'
+        run: |
+          # Check if PR author is an org member
+          AUTHOR="${{ github.event.pull_request.user.login }}"
+          ORG="${{ github.repository_owner }}"
+
+          # Use the GitHub API to check membership; ignore errors (non-members return 404)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/orgs/$ORG/members/$AUTHOR") || true
+
+          if [ "$STATUS" = "204" ]; then
+            echo "is_org_member=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_org_member=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node.js
+        if: steps.changed.outputs.has_files == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        if: steps.changed.outputs.has_files == 'true'
+        working-directory: .github/scripts/validate-integration
+        run: npm ci --ignore-scripts
+
+      - name: Run validation
+        if: steps.changed.outputs.has_files == 'true'
+        id: validate
+        working-directory: .github/scripts/validate-integration
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_DATE: ${{ github.event.pull_request.created_at }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_AUTHOR_IS_ORG_MEMBER: ${{ steps.membership.outputs.is_org_member }}
+          REPO_ROOT: ${{ github.workspace }}
+        run: |
+          # Pass changed files via environment variable
+          if [ -f /tmp/changed_files.txt ]; then
+            export CHANGED_FILES=$(cat /tmp/changed_files.txt)
+          fi
+
+          # Truncate PR_DATE to YYYY-MM-DD (it comes as ISO 8601 datetime)
+          export PR_DATE=$(echo "$PR_DATE" | cut -c1-10)
+
+          npx tsx src/index.ts
+
+      - name: Save PR metadata
+        if: always()
+        run: |
+          mkdir -p /tmp/validation-artifact
+          echo "${{ github.event.pull_request.number }}" > /tmp/validation-artifact/pr_number
+          echo "${{ github.event.pull_request.head.repo.full_name }}" > /tmp/validation-artifact/head_repo
+          echo "${{ github.repository }}" > /tmp/validation-artifact/base_repo
+
+      - name: Collect modified integration files
+        if: steps.changed.outputs.has_files == 'true' && steps.validate.outputs.has_fixes == 'true'
+        run: |
+          # Copy any auto-fixed integration files into the artifact directory
+          mkdir -p /tmp/validation-artifact/fixes
+          while IFS= read -r file; do
+            if [ -f "${{ github.workspace }}/$file" ]; then
+              dir=$(dirname "$file")
+              mkdir -p "/tmp/validation-artifact/fixes/$dir"
+              cp "${{ github.workspace }}/$file" "/tmp/validation-artifact/fixes/$file"
+            fi
+          done < /tmp/changed_files.txt
+          echo "true" > /tmp/validation-artifact/has_fixes
+
+      - name: Upload validation artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-results
+          path: /tmp/validation-artifact/
+          retention-days: 1

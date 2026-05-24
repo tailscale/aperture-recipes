@@ -1,0 +1,160 @@
+name: Post Validation Results
+
+# Runs in the base repo context after the validation workflow completes.
+# This is the privileged half of the split workflow — it has write access
+# but never checks out or executes PR code.
+
+on:
+  workflow_run:
+    workflows: ["Validate Integration Submission"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  comment:
+    name: Post results and push auto-fixes
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request'
+
+    steps:
+      - name: Download validation artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: validation-results
+          path: /tmp/validation-artifact
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read and validate PR number
+        id: pr
+        run: |
+          PR_NUM=$(cat /tmp/validation-artifact/pr_number)
+          if ! [[ "$PR_NUM" =~ ^[0-9]+$ ]]; then
+            echo "Invalid PR number: $PR_NUM"
+            exit 1
+          fi
+          echo "number=$PR_NUM" >> "$GITHUB_OUTPUT"
+
+      - name: Check for auto-fixes
+        id: check-fixes
+        run: |
+          if [ -f /tmp/validation-artifact/has_fixes ]; then
+            echo "has_fixes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check if PR is from fork
+        id: fork-check
+        run: |
+          HEAD_REPO=$(cat /tmp/validation-artifact/head_repo 2>/dev/null || echo "unknown")
+          BASE_REPO=$(cat /tmp/validation-artifact/base_repo 2>/dev/null || echo "unknown")
+          if [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            echo "is_fork=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post or clear PR comment
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          HAS_FIXES: ${{ steps.check-fixes.outputs.has_fixes }}
+          IS_FORK: ${{ steps.fork-check.outputs.is_fork }}
+        with:
+          script: |
+            const prNumber = parseInt(process.env.PR_NUMBER, 10);
+            const marker = '<!-- aperture-validation -->';
+            const conclusion = process.env.CONCLUSION;
+            const runUrl = process.env.RUN_URL;
+            const hasFixes = process.env.HAS_FIXES === 'true';
+            const isFork = process.env.IS_FORK === 'true';
+
+            // List existing comments to find a previous validator comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              per_page: 100,
+            });
+            const existing = comments.find(c => c.body?.includes(marker));
+
+            if (conclusion !== 'success') {
+              // Validation failed or was cancelled — post a notice
+              const body = [
+                marker,
+                '## Integration Validation Report',
+                '',
+                ':x: The validation workflow did not succeed.',
+                `See the [workflow run](${runUrl}) for details.`,
+              ].join('\n');
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  body,
+                });
+              }
+
+              // For fork PRs with auto-fixes, post a comment instead of pushing
+              if (hasFixes && isFork) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  body: [
+                    '<!-- aperture-autofix-notice -->',
+                    '> **Note**: Auto-fixes are available for this submission but cannot be pushed automatically to fork PRs.',
+                    '> Please review the workflow run and apply the suggested changes manually.',
+                  ].join('\n'),
+                });
+              }
+              return;
+            }
+
+            // Validation succeeded — clean up any previous failure comment
+            if (existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }
+
+      - name: Checkout PR branch for auto-fix push
+        if: steps.check-fixes.outputs.has_fixes == 'true' && steps.fork-check.outputs.is_fork != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.workflow_run.head_repository.full_name }}
+          ref: ${{ github.event.workflow_run.head_branch }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply auto-fixes and push
+        if: steps.check-fixes.outputs.has_fixes == 'true' && steps.fork-check.outputs.is_fork != 'true'
+        run: |
+          # Copy fixed files from the artifact into the working tree
+          if [ -d /tmp/validation-artifact/fixes ]; then
+            cp -r /tmp/validation-artifact/fixes/* .
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add integrations/
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit --signoff -m "ci: auto-fix integration submission formatting"
+            git push
+          fi

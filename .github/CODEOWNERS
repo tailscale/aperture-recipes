@@ -1,0 +1,11 @@
+# CODEOWNERS: defines default reviewers for pull requests.
+# GitHub will automatically request reviews from these owners
+# when a PR is opened that modifies matching files.
+#
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Fallback: all files are owned by the Aperture integrations team.
+* @tailscale/aperture-catalog
+
+# Update this file when team structure changes (for example, new sub-teams
+# for specific integration categories or review areas).
