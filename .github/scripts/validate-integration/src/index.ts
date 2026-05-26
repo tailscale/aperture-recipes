@@ -1,5 +1,5 @@
 /**
- * Integration submission validator — entry point.
+ * Integration submission validator: entry point.
  *
  * Orchestrates all validation checks on integration files changed in a PR,
  * applies auto-fixes, and reports non-fixable issues as a PR comment.
@@ -7,13 +7,13 @@
  * Run via: npx tsx src/index.ts
  *
  * Environment variables (set by GitHub Actions):
- *   GITHUB_TOKEN — for posting PR comments
- *   PR_NUMBER — pull request number
- *   PR_DATE — PR open date (YYYY-MM-DD)
- *   PR_AUTHOR — PR author login
- *   PR_AUTHOR_IS_ORG_MEMBER — "true" if author is org member
- *   CHANGED_FILES — newline-separated list of changed files
- *   REPO_ROOT — absolute path to repo checkout
+ *   GITHUB_TOKEN: for posting PR comments
+ *   PR_NUMBER: pull request number
+ *   PR_DATE: PR open date (YYYY-MM-DD)
+ *   PR_AUTHOR: PR author login
+ *   PR_AUTHOR_IS_ORG_MEMBER: "true" if author is org member
+ *   CHANGED_FILES: newline-separated list of changed files
+ *   REPO_ROOT: absolute path to repo checkout
  */
 
 import * as fs from "node:fs";
@@ -81,7 +81,7 @@ function validateFile(
     anyModified = true;
   }
 
-  // 2. Structure (directory + sections) — uses updated content
+  // 2. Structure (directory + sections): uses updated content
   const structResult = validateStructure(
     currentContent,
     filePath,
@@ -94,7 +94,7 @@ function validateFile(
     anyModified = true;
   }
 
-  // 3. Callouts — uses updated content
+  // 3. Callouts: uses updated content
   const calloutsResult = validateCallouts(
     currentContent,
     filePath,
@@ -106,7 +106,7 @@ function validateFile(
     anyModified = true;
   }
 
-  // 4. Links — comment only, no modifications
+  // 4. Links: comment only, no modifications
   const linksResult = validateLinks(currentContent, filePath, repoRoot);
   allIssues.push(...linksResult.issues);
 
@@ -155,7 +155,7 @@ function formatComment(results: ValidationResult[]): string {
   }
 
   comment +=
-    "---\n*This report was generated automatically. See the [contributing guide](CONTRIBUTING.md) and [template](templates/integration.md) for submission requirements.*\n";
+    "---\n*This report was generated automatically. Refer to the [contributing guide](CONTRIBUTING.md) and [template](templates/integration.md) for submission requirements.*\n";
 
   return comment;
 }
@@ -167,7 +167,7 @@ async function postOrUpdateComment(
 ): Promise<void> {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
-    core.warning("GITHUB_TOKEN not set — skipping PR comment.");
+    core.warning("GITHUB_TOKEN not set; skipping PR comment.");
     return;
   }
 
@@ -233,7 +233,7 @@ async function deletePreviousComment(prNumber: number): Promise<void> {
       repo,
       comment_id: existing.id,
     });
-    core.info("Deleted previous validation comment — all checks pass now.");
+    core.info("Deleted previous validation comment; all checks pass now.");
   }
 }
 
@@ -301,7 +301,7 @@ async function main(): Promise<void> {
     if (comment) {
       await postOrUpdateComment(comment, prNumber);
     } else {
-      // All clean — remove any old comment
+      // All clean; remove any old comment
       await deletePreviousComment(prNumber);
     }
   }

@@ -1,7 +1,7 @@
 name: Post Validation Results
 
 # Runs in the base repo context after the validation workflow completes.
-# This is the privileged half of the split workflow — it has write access
+# This is the privileged half of the split workflow. It has write access
 # but never checks out or executes PR code.
 
 on:
@@ -82,13 +82,13 @@ jobs:
             const existing = comments.find(c => c.body?.includes(marker));
 
             if (conclusion !== 'success') {
-              // Validation failed or was cancelled — post a notice
+              // Validation failed or was cancelled; post a notice
               const body = [
                 marker,
                 '## Integration Validation Report',
                 '',
                 ':x: The validation workflow did not succeed.',
-                `See the [workflow run](${runUrl}) for details.`,
+                `Refer to the [workflow run](${runUrl}) for details.`,
               ].join('\n');
 
               if (existing) {
@@ -123,7 +123,7 @@ jobs:
               return;
             }
 
-            // Validation succeeded — clean up any previous failure comment
+            // Validation succeeded; clean up any previous failure comment
             if (existing) {
               await github.rest.issues.deleteComment({
                 owner: context.repo.owner,

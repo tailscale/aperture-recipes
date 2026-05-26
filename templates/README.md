@@ -19,16 +19,16 @@ Valid values for `integration_type`:
 
 The `tags` field is an optional array of free-form strings used for categorization. Tags help users discover integrations by capability or domain. Use lowercase, hyphenated values. Example values:
 
-- `guardrail` — enforces policy or limits on requests
-- `security` — security-focused integration
-- `pii-redaction` — detects or removes personally identifiable information
-- `observability` — provides visibility into LLM traffic
-- `logging` — records requests or responses for audit
-- `cost-tracking` — monitors or enforces spending limits
-- `content-filtering` — filters or classifies content
-- `compliance` — supports regulatory or organizational compliance
+- `guardrail`: enforces policy or limits on requests
+- `security`: security-focused integration
+- `pii-redaction`: detects or removes personally identifiable information
+- `observability`: provides visibility into LLM traffic
+- `logging`: records requests or responses for audit
+- `cost-tracking`: monitors or enforces spending limits
+- `content-filtering`: filters or classifies content
+- `compliance`: supports regulatory or organizational compliance
 
-You can use any string value. There is no closed vocabulary — choose tags that accurately describe what your integration does.
+You can use any string value. There is no closed vocabulary. Choose tags that accurately describe what your integration does.
 
 ## Which sections apply to which types
 
@@ -42,7 +42,7 @@ All integration types use the same section structure. The template sections are 
 | **Prerequisites** | What the user needs from both sides (Aperture + external service). |
 | **Setup and configuration** | Step-by-step instructions to configure the external service. Include working examples inline. |
 | **Verify the integration** | How to confirm the integration is working. Include test steps and expected outcomes. |
-| **Maintenance and support** | Who maintains this and how to get help. This section is submission-only — it is not exported to the Tailscale docs site. |
+| **Maintenance and support** | Who maintains this and how to get help. This section is submission-only and is not exported to the Tailscale docs site. |
 
 ### Hook-specific sections
 
@@ -52,7 +52,7 @@ Hook integrations (`pre_request_hook` and `post_response_hook`) use these sectio
 |---|---|---|
 | **Hook definition** | All hooks | The hook entry in the Aperture config `hooks` map. Describe integration-specific field values and link to the protocol reference for the full field list. |
 | **Grant wiring** | All hooks | The `send_hooks` entry that activates the hook. Include the `dst` key warning callout. |
-| **Hook response format** | Pre-request hooks only | What actions the hook returns (allow, block, modify) with example responses. Include the cache impact caution if the hook uses `modify`. Delete this section for post-response hooks. |
+| **Hook response format** | Pre-request hooks only | What actions the hook returns (allow, block, modify) with example responses. Include the cache impact note if the hook uses `modify`. Delete this section for post-response hooks. |
 
 For provider/tool integrations, replace these three sections with a single **Aperture configuration** section showing grant configuration.
 
@@ -60,9 +60,9 @@ For provider/tool integrations, replace these three sections with a single **Ape
 
 These sections are encouraged where applicable. Delete them if they don't apply:
 
-- **Troubleshooting** — symptom/cause/resolution table. Encouraged for hook integrations where configuration issues are common.
-- **Security considerations** — what data leaves the Aperture perimeter, credential handling, network path. Include this when the integration sends sensitive data to an external service.
-- **Reference** — links to external documentation, guides, or API references.
+- **Troubleshooting**: symptom/cause/resolution table. Encouraged for hook integrations where configuration issues are common.
+- **Security considerations**: what data leaves the Aperture perimeter, credential handling, network path. Include this when the integration sends sensitive data to an external service.
+- **Reference**: links to external documentation, guides, or API references.
 
 ### Dual-type integrations
 
@@ -80,7 +80,7 @@ The integration should be placed in the directory matching its primary type. Use
 The template includes two kinds of guidance:
 
 - **HTML comments** (`<!-- -->`) tell you what to write in each section. These do not render in the final document. Remove them when you are done.
-- **GitHub callouts** (`> [!WARNING]`, `> [!NOTE]`, `> [!TIP]`, `> [!CAUTION]`) are visible in the rendered document and link to authoritative references (the [protocol quick reference](../docs/protocol-reference.md) and [Aperture documentation](https://tailscale.com/docs/aperture)). Keep the callouts that apply to your integration and delete the ones that do not. For example, delete the cache impact caution if your hook does not use the `modify` action.
+- **GitHub callouts** (`> [!WARNING]`, `> [!NOTE]`, `> [!TIP]`, `> [!CAUTION]`) are visible in the rendered document and link to authoritative references (the [protocol quick reference](../docs/protocol-reference.md) and [Aperture documentation](https://tailscale.com/docs/aperture)). Keep the callouts that apply to your integration and delete the ones that do not. For example, delete the cache impact note if your hook does not use the `modify` action.
 
 ## How to use the template
 

@@ -88,7 +88,7 @@ export async function escalateStaleIntegrations(
 ): Promise<EscalationResult[]> {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
-    core.warning("GITHUB_TOKEN not set — skipping escalation.");
+    core.warning("GITHUB_TOKEN not set; skipping escalation.");
     return [];
   }
 
@@ -112,7 +112,7 @@ export async function escalateStaleIntegrations(
 
   // 60-day threshold matches CONTRIBUTING.md's deprecation escalation policy.
   // The separate 90-day unresponsiveness trigger (CONTRIBUTING.md) is not yet
-  // automated — it requires checking issue activity, which is a future
+  // automated; it requires checking issue activity, which is a future
   // enhancement.
   // TODO: Automate the 90-day unresponsiveness escalation by inspecting issue
   // comment/activity history.
@@ -133,7 +133,7 @@ export async function escalateStaleIntegrations(
         (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24),
       );
       core.info(
-        `Issue #${issue.number} is ${daysOld} days old — not yet 60 days. Skipping.`,
+        `Issue #${issue.number} is ${daysOld} days old, not yet 60 days. Skipping.`,
       );
       continue;
     }
@@ -144,7 +144,7 @@ export async function escalateStaleIntegrations(
     );
     if (!filePathMatch) {
       core.warning(
-        `Issue #${issue.number} has no file_path marker — skipping.`,
+        `Issue #${issue.number} has no file_path marker; skipping.`,
       );
       continue;
     }
@@ -154,7 +154,7 @@ export async function escalateStaleIntegrations(
     // Path traversal guard: ensure path stays under integrations/
     if (!isPathSafe(repoRoot, filePath)) {
       core.warning(
-        `Issue #${issue.number} has suspicious file_path "${filePath}" — skipping.`,
+        `Issue #${issue.number} has suspicious file_path "${filePath}"; skipping.`,
       );
       continue;
     }
@@ -172,7 +172,7 @@ export async function escalateStaleIntegrations(
 
     if (parsed.data.status === "deprecated") {
       core.info(
-        `${filePath} already deprecated — closing issue #${issue.number}.`,
+        `${filePath} already deprecated; closing issue #${issue.number}.`,
       );
       await octokit.rest.issues.update({
         owner,
@@ -189,7 +189,7 @@ export async function escalateStaleIntegrations(
     const updated = replaceStatus(content, "deprecated");
     if (!updated) {
       core.warning(
-        `Could not find status field in frontmatter of ${filePath} — skipping.`,
+        `Could not find status field in frontmatter of ${filePath}; skipping.`,
       );
       continue;
     }

@@ -2,8 +2,8 @@
  * Required callout injection.
  *
  * Checks for and injects two mandatory callouts:
- * 1. dst key warning — when file has grant examples
- * 2. Cache impact note — when pre_request_hook uses modify action
+ * 1. dst key warning: when file has grant examples
+ * 2. Cache impact note: when pre_request_hook uses modify action
  *
  * Injection targets are type-aware: hook integrations use the new section
  * names (Grant wiring, Hook response format) while non-hook integrations
@@ -15,11 +15,11 @@ import { HOOK_TYPES, type IntegrationType, type ValidationIssue } from "./types.
 
 /** The canonical dst warning callout text from the template. */
 const DST_WARNING = `> [!WARNING]
-> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit \`dst\` key (for example, \`"dst": ["tag:aperture"]\`). Omitting \`dst\` causes the grant to silently apply to nothing. Config-file grants do not use \`dst\` — omit it there. See the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.`;
+> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit \`dst\` key (for example, \`"dst": ["tag:aperture"]\`). Omitting \`dst\` causes the grant to silently apply to nothing. Config-file grants do not use \`dst\`; omit it there. Refer to the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.`;
 
 /** The canonical cache impact callout text from the template. */
-const CACHE_IMPACT_NOTE = `> [!CAUTION]
-> **Cache impact**: any modification to request content invalidates the LLM provider's prompt cache. The next request for the same content incurs a cache miss (up to 10x cost increase). See the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details. If your hook only uses \`allow\` and \`block\`, delete this callout.`;
+const CACHE_IMPACT_NOTE = `> [!NOTE]
+> **Cache impact**: Modifying the current turn's content (the new user message) has no cache impact because the provider has not received it yet. However, modifying historical context (earlier messages already cached by the provider) invalidates the prompt cache (up to 10x cost increase). Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details. If your hook only uses \`allow\` and \`block\`, delete this callout.`;
 
 export interface CalloutsResult {
   issues: ValidationIssue[];
@@ -87,8 +87,11 @@ function hasDstWarning(body: string): boolean {
 
 function hasCacheImpactNote(body: string): boolean {
   return (
+    body.includes("invalidates the prompt cache") ||
     body.includes("invalidates the LLM provider's prompt cache") ||
     body.includes("invalidates the LLM provider\u2019s prompt cache") ||
+    body.includes("no prompt cache impact") ||
+    body.includes("no cache impact") ||
     body.includes("cache miss (up to 10x cost increase)") ||
     body.includes("cache miss (up to 10x cost") ||
     body.includes("does not affect LLM provider cache behavior")
@@ -114,7 +117,7 @@ function injectAfterSection(
   );
   const match = sectionRegex.exec(body);
   if (!match || match.index === undefined) {
-    // Section not found — append at end as fallback
+    // Section not found; append at end as fallback
     return body.trimEnd() + "\n\n" + calloutText + "\n";
   }
 
@@ -124,7 +127,7 @@ function injectAfterSection(
   const nextH2 = restOfBody.search(/^## /m);
 
   if (nextH2 === -1) {
-    // No next section — append callout at end of file
+    // No next section; append callout at end of file
     return body.trimEnd() + "\n\n" + calloutText + "\n";
   }
 
@@ -193,7 +196,7 @@ export function validateCallouts(
     if (result) {
       body = result;
     } else {
-      // No matching section — append at end
+      // No matching section; append at end
       body = body.trimEnd() + "\n\n" + DST_WARNING + "\n";
     }
 
@@ -223,7 +226,7 @@ export function validateCallouts(
       issues.push({
         file: filePath,
         message:
-          "Injected the cache impact callout. This is required because this pre-request hook references the `modify` action, which invalidates the LLM provider's prompt cache.",
+          "Injected the cache impact callout. This is required because this pre-request hook references the `modify` action. The callout explains that current-turn modifications have no cache impact while historical context modifications do.",
         fixed: true,
       });
       modified = true;

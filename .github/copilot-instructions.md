@@ -69,7 +69,7 @@ Optional sections (delete if not applicable): Troubleshooting, Security consider
 
 1. **`dst` key in grants**: Tailnet grants require an explicit `dst` key. Omitting it causes the grant to silently apply to nothing. Any submission with grant examples must warn about this.
 
-2. **Cache impact of `modify` action**: Pre-request hooks that use the `modify` action invalidate the LLM provider's prompt cache (up to 10x cost increase). Any pre-request hook mentioning `modify` must include the cache impact callout.
+2. **Cache impact of `modify` action**: Pre-request hooks that use the `modify` action can affect the LLM provider's prompt cache, but only when modifying historical context (earlier messages already cached by the provider). Modifying the current turn's content has no cache impact. Any pre-request hook mentioning `modify` must include the cache impact callout explaining this distinction.
 
 ## Voice and tone
 

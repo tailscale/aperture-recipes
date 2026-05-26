@@ -109,7 +109,7 @@ function isPrivateIp(ip: string): boolean {
     const second = parseInt(ip.split(".")[1], 10);
     if (second >= 64 && second <= 127) return true;
   }
-  // IPv4-mapped IPv6 addresses (::ffff:x.x.x.x) — extract the embedded
+  // IPv4-mapped IPv6 addresses (::ffff:x.x.x.x): extract the embedded
   // IPv4 address and check it against private ranges.
   if (ip.toLowerCase().startsWith("::ffff:")) {
     const embedded = ip.slice(7); // strip "::ffff:" prefix
@@ -160,7 +160,7 @@ async function checkSsrf(url: string): Promise<string | null> {
       }
     }
   } catch {
-    // DNS resolution failure — the URL is likely broken anyway; let
+    // DNS resolution failure: the URL is likely broken anyway; let
     // the fetch attempt surface the real error.
   }
 
@@ -178,8 +178,8 @@ async function checkUrl(url: string): Promise<BrokenLink | null> {
   // SSRF guard: reject private/reserved targets
   const ssrfBlock = await checkSsrf(url);
   if (ssrfBlock) {
-    core.info(`Skipping URL (SSRF protection): ${url} — ${ssrfBlock}`);
-    return null; // Not a broken link — just excluded from checking
+    core.info(`Skipping URL (SSRF protection): ${url} - ${ssrfBlock}`);
+    return null; // Not a broken link; just excluded from checking
   }
 
   const headers = { "User-Agent": "aperture-catalog-staleness-bot/1.0" };
@@ -278,7 +278,7 @@ export async function checkAllIntegrations(
       const result = await checkUrl(url);
       if (result) {
         brokenLinks.push(result);
-        core.warning(`${name}: broken link ${result.url} — ${result.reason}`);
+        core.warning(`${name}: broken link ${result.url} - ${result.reason}`);
       }
     }
 

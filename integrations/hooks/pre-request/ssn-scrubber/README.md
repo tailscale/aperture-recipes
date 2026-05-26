@@ -12,7 +12,7 @@ tags: [guardrail, security, pii-redaction]
 
 ## Summary
 
-A **guardrail** in Aperture is a `pre_request` hook — a synchronous HTTP endpoint
+A **guardrail** in Aperture is a `pre_request` hook, a synchronous HTTP endpoint
 that Aperture calls *before* forwarding a request to the LLM. The proxy waits for
 the hook's response and acts on it before any data leaves your network.
 
@@ -95,7 +95,7 @@ Hooks do nothing until they are referenced in a grant's `send_hooks` list.
 > because the modified body replaces the original request wholesale.
 
 > [!WARNING]
-> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` causes the grant to silently apply to nothing. See the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
+> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` causes the grant to silently apply to nothing. Refer to the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
 
 ## Hook response format
 
@@ -130,8 +130,8 @@ Aperture returns an error to the client; the message is included in the response
 Whatever you return as `request_body` **replaces** what Aperture would have sent
 to the LLM. Requires `"request_body"` in the grant's `send` list.
 
-> [!CAUTION]
-> **Cache impact**: any modification to request content invalidates the LLM provider's prompt cache. The next request for the same content incurs a cache miss (up to 10x cost increase). See the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details.
+> [!NOTE]
+> **Cache impact**: This hook modifies only the current user message (content the LLM provider has not yet received), so there is no prompt cache impact. Hooks that modify historical context (earlier messages already cached by the provider) do invalidate the cache and can increase costs by up to 10x. Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details.
 
 ## Execution order (stacking multiple hooks)
 

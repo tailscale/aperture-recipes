@@ -173,7 +173,7 @@ To get an audit event for every completed request (even when no tools are called
 To limit which users or models trigger Highflame evaluation, narrow the `src` or `models` fields in the surrounding grant rather than using wildcards.
 
 > [!WARNING]
-> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` causes the grant to silently apply to nothing. See the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
+> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` causes the grant to silently apply to nothing. Refer to the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
 
 > [!NOTE]
 > The `send` array in your grant wiring controls exactly what data your hook receives. Review the [send field reference](../../../../docs/protocol-reference.md#optional-fields-controlled-by-send-list) to understand what each value exposes.

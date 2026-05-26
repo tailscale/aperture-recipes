@@ -42,7 +42,7 @@ export const TYPE_NORMALIZATIONS: Record<string, IntegrationType> = {
 /**
  * Required section groups for all integration types.
  *
- * Each inner array lists acceptable heading names — the file must have at least
+ * Each inner array lists acceptable heading names; the file must have at least
  * one heading from each group. The first name is the preferred name used in the
  * template and auto-fix stubs. Later names are legacy alternatives accepted for
  * backward compatibility with existing submissions.

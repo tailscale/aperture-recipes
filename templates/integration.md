@@ -17,7 +17,7 @@ tags: []
 
 ## Summary
 
-<!-- What this integration does and why an Aperture user would want it. Write as a standalone paragraph — this becomes the introduction on the docs page. Include what problem it solves and what gap it fills. -->
+<!-- What this integration does and why an Aperture user would want it. Write as a standalone paragraph; this becomes the introduction on the docs page. Include what problem it solves and what gap it fills. -->
 
 ## Prerequisites
 
@@ -32,7 +32,7 @@ tags: []
 
 <!-- Step-by-step instructions to configure the external service for this integration.
      Number each step. Start each step with an imperative verb.
-     Include working examples inline — sample requests, expected responses, config snippets.
+     Include working examples inline: sample requests, expected responses, configuration snippets.
      Use fenced code blocks with language identifiers. -->
 
 1.
@@ -44,7 +44,7 @@ tags: []
 
      Show the hook entry for the `hooks` map in the Aperture config file.
      Describe integration-specific field values (for example, the endpoint URL, recommended timeout).
-     You do not need to document every hook field — see the
+     You do not need to document every hook field. Refer to the
      [hook configuration reference](../../../../docs/protocol-reference.md#hook-configuration) for the
      full field list. -->
 
@@ -64,8 +64,8 @@ Add the hook to the `hooks` map in your Aperture config:
 
 <!-- Hooks do nothing until they are referenced in a grant's `send_hooks` list.
      Show the send_hooks entry for this integration. Include only the events and
-     send values this integration needs — do not list all possible values.
-     See the [send field reference](../../../../docs/protocol-reference.md#optional-fields-controlled-by-send-list)
+     send values this integration needs. Do not list all possible values.
+     Refer to the [send field reference](../../../../docs/protocol-reference.md#optional-fields-controlled-by-send-list)
      for all available `send` values. -->
 
 ```json
@@ -82,7 +82,7 @@ Add the hook to the `hooks` map in your Aperture config:
 > because the modified body replaces the original request wholesale.
 
 > [!WARNING]
-> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` causes the grant to silently apply to nothing. See the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
+> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` causes the grant to silently apply to nothing. Refer to the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
 
 <!-- FOR PROVIDER AND TOOL INTEGRATIONS: Replace the "Hook definition" and
      "Grant wiring" sections above with this single section. -->
@@ -113,7 +113,7 @@ Add the hook to the `hooks` map in your Aperture config:
 ```
 
 > [!WARNING]
-> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` causes the grant to silently apply to nothing. Config-file grants do not use `dst` — omit it there. See the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
+> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` causes the grant to silently apply to nothing. Config-file grants do not use `dst`; omit it there. Refer to the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
 
 ## Hook response format
 
@@ -122,7 +122,7 @@ Add the hook to the `hooks` map in your Aperture config:
 
      Describe what actions your hook returns and show example responses.
      Delete any actions your hook does not use.
-     See the [GuardrailResponse reference](../../../../docs/protocol-reference.md#guardrailresponse---what-your-pre-request-hook-returns)
+     Refer to the [GuardrailResponse reference](../../../../docs/protocol-reference.md#guardrailresponse---what-your-pre-request-hook-returns)
      for the full response schema. -->
 
 Your hook endpoint returns a [`GuardrailResponse`](../../../../docs/protocol-reference.md#guardrailresponse---what-your-pre-request-hook-returns) with an `"action"` field:
@@ -155,8 +155,8 @@ Aperture returns an error to the client; the message is included in the response
 
 Whatever you return as `request_body` **replaces** what Aperture would have sent to the LLM. Requires `"request_body"` in the grant's `send` list.
 
-> [!CAUTION]
-> **Cache impact**: any modification to request content invalidates the LLM provider's prompt cache. The next request for the same content incurs a cache miss (up to 10x cost increase). See the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details. If your hook only uses `allow` and `block`, delete this callout.
+> [!NOTE]
+> **Cache impact**: Modifying the current turn's content (the new user message) has no cache impact because the provider has not received it yet. However, modifying historical context (earlier messages already cached by the provider) invalidates the prompt cache (up to 10x cost increase). Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details. If your hook only uses `allow` and `block`, delete this callout.
 
 ## Verify the integration
 

@@ -34,7 +34,7 @@ Valid send values: `tools`, `request_body`, `response_body`, `raw_responses`, `u
 The Security considerations section should address:
 - What data leaves the Aperture perimeter (based on the `send` list)
 - How credentials should be stored (not hardcoded in config)
-- Whether the hook sees plaintext request/response content
+- Whether the hook receives plaintext request/response content
 - Network isolation if running on a tailnet
 
 ## Technical accuracy checks

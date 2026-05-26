@@ -2,7 +2,7 @@
  * Internal link validation.
  *
  * Scans for relative markdown links and checks that the target files exist
- * in the repository. This is comment-only — no auto-fix.
+ * in the repository. This is comment-only; no auto-fix.
  */
 
 import * as fs from "node:fs";

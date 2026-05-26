@@ -19,7 +19,7 @@ Aperture is configured via a config file and can also have grants defined at the
 
 ## Webhook protocol
 
-Hooks communicate via a JSON webhook protocol. See the [protocol quick reference](docs/protocol-reference.md) for the full specification, payload types, and configuration format.
+Hooks communicate via a JSON webhook protocol. Refer to the [protocol quick reference](docs/protocol-reference.md) for the full specification, payload types, and configuration format.
 
 ### Core types
 
@@ -117,7 +117,7 @@ Aperture also has a connectors system (MCP servers and HTTP APIs with OAuth2 sup
 
 **Grant `dst` key**: Tailnet grants (in the tailnet policy file) require an explicit `dst` key. Omitting it causes the grant to silently apply to nothing. Config-file grants do not use `dst`. Integration docs that show tailnet grant examples must include the `dst` key and warn about this; config-file grant examples should omit it.
 
-**Cache sensitivity**: Pre-request hooks that use the `modify` action to rewrite request content invalidate the LLM provider's cache. The next request incurs a cache miss (up to 10x cost). Integration docs for modifying hooks must include the cache impact note.
+**Cache sensitivity**: Pre-request hooks that use the `modify` action can affect the LLM provider's cache, but only if they modify **historical context** (earlier messages already cached by the provider). Modifying the current turn's content (the new user message) has no cache impact because the provider has not received it yet. Integration docs for hooks that modify historical context must include the cache impact note.
 
 **Pricing**: Aperture cost tracking is always an estimate. Integration docs should not make precise cost claims.
 

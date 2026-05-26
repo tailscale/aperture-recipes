@@ -21,7 +21,7 @@ integrations/
 
 Submissions should include inline code examples (configuration snippets, sample requests, expected responses) directly in the README. If your integration involves a full code implementation, host that in your own repository and link to it from the submission. This repo is for documentation, not runnable code.
 
-Some integrations support multiple event types (for example, both pre-request enforcement and post-response observability). Use the `additional_types` frontmatter field for these -- see the template README for details.
+Some integrations support multiple event types (for example, both pre-request enforcement and post-response observability). Use the `additional_types` frontmatter field for these -- refer to the template README for details.
 
 ### Supplemental files
 
@@ -31,14 +31,14 @@ Your integration directory can include additional files alongside `README.md`. T
 - **Scripts and code samples**: helper scripts, example hook implementations, or configuration generators that complement the documentation (for example, `example-hook.py`, `validate-config.sh`).
 - **Images and screenshots**: diagrams, architecture overviews, or UI screenshots referenced from the README (for example, `architecture.png`, `dashboard-setup.png`).
 
-The `README.md` remains the primary entry point. Supplemental files should be referenced from the README so reviewers and readers can discover them. Keep the directory focused — include files that directly support the integration documentation, not full application codebases.
+The `README.md` remains the primary entry point. Supplemental files should be referenced from the README so reviewers and readers can discover them. Keep the directory focused. Include files that directly support the integration documentation, not full application codebases.
 
 ## What not to submit
 
 This repo is not the right place for:
 
 - **Feature requests or bug reports** for Aperture itself. Use the main [Aperture feedback channels](https://tailscale.com/contact/support) instead.
-- **Support questions**: See the [Aperture documentation](https://tailscale.com/docs/aperture) or community channels.
+- **Support questions**: Refer to the [Aperture documentation](https://tailscale.com/docs/aperture) or community channels.
 - **Aperture CLI contributions**: The CLI is not accepting external contributions at this time.
 - **Full application codebases**: This repo is for integration documentation, not deployable applications. Include helper scripts and code samples as supplemental files, but host full implementations in your own repository and link to them.
 
@@ -80,10 +80,10 @@ Submissions must meet the following minimum standard:
 
 - Follow the template structure with all required sections filled out.
 - Include working inline code examples (configuration snippets, sample API calls, expected responses).
-- Provide copy-pasteable configuration snippets for the integration-specific pieces (hook endpoint, `send_hooks` wiring). These do not need to be complete Aperture configurations — show enough that a developer with an existing Aperture setup can adapt the example.
+- Provide copy-pasteable configuration snippets for the integration-specific pieces (hook endpoint, `send_hooks` wiring). These do not need to be complete Aperture configurations. Show enough that a developer with an existing Aperture setup can adapt the example.
 - Fill in all required frontmatter fields with accurate values.
 - Be written clearly enough that another developer can set up the integration by following the documentation alone.
-- For hook integrations: include a valid hook definition (`hooks` map entry) and grant wiring (`send_hooks` entry) with valid `send` field values. See the [protocol quick reference](docs/protocol-reference.md) for the specification.
+- For hook integrations: include a valid hook definition (`hooks` map entry) and grant wiring (`send_hooks` entry) with valid `send` field values. Refer to the [protocol quick reference](docs/protocol-reference.md) for the specification.
 - If the same hook may appear in multiple grants, note that `events` and `send` lists are merged (union) and the hook fires once per request.
 
 Submissions that are missing required sections or include placeholder content will be sent back for revision.
@@ -100,7 +100,7 @@ The review covers four areas:
 
 **Security assessment**: Are there credentials, API keys, or secrets in the examples? Are the security implications of the integration documented? Does the hook handle sensitive data appropriately?
 
-**Known gotcha verification**: The review team checks for two common issues. First, if the integration involves grants, the documentation must warn that tailnet grants require an explicit `dst` key (omitting it silently applies the grant to nothing). A brief callout is sufficient — you do not need to show complete grant examples in both Aperture and tailnet syntax. Second, if the integration modifies request content (via the `modify` action), the documentation must include the cache impact note (see the "Cache impact" callout in `templates/integration.md`).
+**Known gotcha verification**: The review team checks for two common issues. First, if the integration involves grants, the documentation must warn that tailnet grants require an explicit `dst` key (omitting it silently applies the grant to nothing). A brief callout is sufficient; you do not need to show complete grant examples in both Aperture and tailnet syntax. Second, if the integration modifies request content (via the `modify` action), the documentation must include the cache impact note explaining that current-turn modifications have no cache impact while historical context modifications do (refer to the "Cache impact" callout in `templates/integration.md`).
 
 The docs/ecosystem lead triages incoming PRs. Aperture engineers review the technical and security aspects. Expect the review to involve at least one round of feedback.
 
@@ -120,7 +120,7 @@ Every submission has a `status` field in its frontmatter. There are three possib
 
 **`official`** means the Aperture team has promoted the content. This happens when an integration meets the official documentation standard and the team has verified it independently. Contributors cannot set this status themselves.
 
-**`deprecated`** means the content is no longer accurate or compatible with current Aperture versions. Deprecated submissions remain in the repo but are clearly marked. See the deprecation policy below.
+**`deprecated`** means the content is no longer accurate or compatible with current Aperture versions. Deprecated submissions remain in the repo but are clearly marked. Refer to the deprecation policy below.
 
 ## Deprecation and staleness policy
 
@@ -136,7 +136,7 @@ The original contributor is expected to keep their submission current. The revie
 
 ### Outcomes
 
-When content is flagged as stale, a `stale` label is applied to the tracking issue and a warning banner is added to the submission's README. If the content is not updated within 60 days of being flagged, the `status` frontmatter field is changed to `deprecated` (deprecation escalation). This 60-day window is separate from the 90-day unresponsiveness trigger above — the 90-day period determines when a staleness review is opened, while the 60-day period determines when a flagged submission is escalated to deprecated. Deprecated content stays in the repository but is clearly marked as no longer current.
+When content is flagged as stale, a `stale` label is applied to the tracking issue and a warning banner is added to the submission's README. If the content is not updated within 60 days of being flagged, the `status` frontmatter field is changed to `deprecated` (deprecation escalation). This 60-day window is separate from the 90-day unresponsiveness trigger above. The 90-day period determines when a staleness review is opened, while the 60-day period determines when a flagged submission is escalated to deprecated. Deprecated content stays in the repository but is clearly marked as no longer current.
 
 ## Licensing
 

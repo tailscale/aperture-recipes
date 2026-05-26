@@ -8,14 +8,14 @@ body:
       value: |
         Thanks for submitting an integration! This form mirrors the [integration template](https://github.com/tailscale/aperture-catalog/blob/main/templates/integration.md). After review, a maintainer may convert this into a PR on your behalf or ask you to open one.
 
-        Only **Integration name**, **Integration type**, and **Summary** are required. Fill in as much as you can — the review team will work with you on any gaps.
+        Only **Integration name**, **Integration type**, and **Summary** are required. Fill in as much as you can; the review team will work with you on any gaps.
 
         **Helpful references:**
-        - [Aperture documentation](https://tailscale.com/docs/aperture) — product overview and getting started
-        - [Configuration reference](https://tailscale.com/docs/aperture/configuration) — grants, hooks, providers, and quotas
-        - [Guardrails guide](https://tailscale.com/docs/aperture/guardrails) — conceptual guide to pre-request hooks
-        - [Build a custom webhook](https://tailscale.com/docs/aperture/how-to/build-custom-webhook) — step-by-step hook tutorial
-        - [Template README](https://github.com/tailscale/aperture-catalog/blob/main/templates/README.md) — section-by-section guidance
+        - [Aperture documentation](https://tailscale.com/docs/aperture): product overview and getting started
+        - [Configuration reference](https://tailscale.com/docs/aperture/configuration): grants, hooks, providers, and quotas
+        - [Guardrails guide](https://tailscale.com/docs/aperture/guardrails): conceptual guide to pre-request hooks
+        - [Build a custom webhook](https://tailscale.com/docs/aperture/how-to/build-custom-webhook): step-by-step hook tutorial
+        - [Template README](https://github.com/tailscale/aperture-catalog/blob/main/templates/README.md): section-by-section guidance
 
   - type: input
     id: integration-name
@@ -45,7 +45,7 @@ body:
     id: integration-type
     attributes:
       label: Integration type
-      description: "Primary type. See the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for how each type is configured."
+      description: "Primary type. Refer to the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for how each type is configured."
       options:
         - Pre-request hook
         - Post-response hook
@@ -67,7 +67,7 @@ body:
     id: tags
     attributes:
       label: Tags
-      description: "Comma-separated lowercase hyphenated tags for categorization. See the [template README](https://github.com/tailscale/aperture-catalog/blob/main/templates/README.md#frontmatter-tags) for common values."
+      description: "Comma-separated lowercase hyphenated tags for categorization. Refer to the [template README](https://github.com/tailscale/aperture-catalog/blob/main/templates/README.md#frontmatter-tags) for common values."
       placeholder: "guardrail, security, pii-redaction"
     validations:
       required: false
@@ -105,7 +105,7 @@ body:
 
         ### Aperture configuration
 
-        **Hook integrations** (`pre_request_hook`, `post_response_hook`): fill in *Hook definition* and *Grant wiring* below. See the [hook configuration reference](https://tailscale.com/docs/aperture/configuration#hooks) for the full field list.
+        **Hook integrations** (`pre_request_hook`, `post_response_hook`): fill in *Hook definition* and *Grant wiring* below. Refer to the [hook configuration reference](https://tailscale.com/docs/aperture/configuration#hooks) for the full field list.
 
         **Provider and tool integrations**: skip *Hook definition*, and use *Grant wiring* to show your [grant configuration](https://tailscale.com/docs/aperture/configuration#grants).
 
@@ -125,7 +125,7 @@ body:
       description: |
         For hook integrations: the `send_hooks` entry that activates the hook. Include only the events and send values this integration needs.
         For provider/tool integrations: the relevant [grant configuration](https://tailscale.com/docs/aperture/configuration#grants).
-        Note: [tailnet policy grants](https://tailscale.com/kb/1337/acl-syntax#grants) require an explicit `dst` key — omitting it causes the grant to silently apply to nothing. Config-file grants do not use `dst`.
+        Note: [tailnet policy grants](https://tailscale.com/kb/1337/acl-syntax#grants) require an explicit `dst` key. Omitting it causes the grant to silently apply to nothing. Config-file grants do not use `dst`.
       render: markdown
     validations:
       required: false

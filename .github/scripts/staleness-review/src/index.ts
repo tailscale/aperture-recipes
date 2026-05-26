@@ -1,5 +1,5 @@
 /**
- * Staleness review — entry point.
+ * Staleness review: entry point.
  *
  * Two-phase process:
  * 1. Check external links in all integration READMEs. Open issues for
@@ -10,8 +10,8 @@
  * Run via: npx tsx src/index.ts
  *
  * Environment variables (set by GitHub Actions):
- *   GITHUB_TOKEN — for creating/updating issues
- *   REPO_ROOT — absolute path to repo checkout
+ *   GITHUB_TOKEN: for creating/updating issues
+ *   REPO_ROOT: absolute path to repo checkout
  */
 
 import * as fs from "node:fs";
@@ -74,7 +74,7 @@ function addStalenessBanner(filePath: string, repoRoot: string): boolean {
     `\n${STALENESS_BANNER_START}\n` +
     `> [!WARNING]\n` +
     `> This integration has been flagged as **stale**: some external links may be broken.\n` +
-    `> See the tracking issue in this repository for details. If you maintain this\n` +
+    `> Refer to the tracking issue in this repository for details. If you maintain this\n` +
     `> integration, please open a PR to fix the broken links.\n` +
     `${STALENESS_BANNER_END}\n`;
 
@@ -92,7 +92,7 @@ async function openOrUpdateIssue(
 ): Promise<void> {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
-    core.warning("GITHUB_TOKEN not set — skipping issue creation.");
+    core.warning("GITHUB_TOKEN not set; skipping issue creation.");
     return;
   }
 
@@ -103,7 +103,7 @@ async function openOrUpdateIssue(
 
   // Wrap URLs in backticks to prevent markdown injection
   const linkList = report.brokenLinks
-    .map((l) => `- \`${l.url}\` — ${l.reason}`)
+    .map((l) => `- \`${l.url}\`: ${l.reason}`)
     .join("\n");
 
   const body =
@@ -117,7 +117,7 @@ async function openOrUpdateIssue(
     `The original contributor is expected to update the documentation. ` +
     `If you are the maintainer, please open a PR to fix the broken links and close this issue.`;
 
-  const title = `Stale: ${report.name} — broken external links`;
+  const title = `Stale: ${report.name} - broken external links`;
 
   // Check for an existing open issue for this integration.
   // Use paginate to handle repos with >100 stale issues.

@@ -22,6 +22,61 @@ User -> Aperture -> [POST HookCallData] -> Your Hook -> [GuardrailResponse] -> A
 | Pre-request | Before the request reaches the LLM provider | Yes | Yes - allow, block, or modify the request |
 | Post-response | After the LLM response completes | No (fire-and-forget) | No - response not parsed |
 
+### Choose between pre-request and post-response
+
+Pre-request and post-response hooks serve different roles. Use this
+comparison to decide which type fits your integration.
+
+**Pre-request hooks** intercept requests *before* the LLM provider receives
+them. They are synchronous: Aperture waits for your hook to respond before
+forwarding the request. This gives them three capabilities post-response
+hooks do not have:
+
+1. **Block**: reject a request outright, returning an error to the user.
+1. **Modify**: rewrite the request body before it reaches the provider.
+1. **Cache-safe content modification**: because the provider has not received
+   the current turn's content yet, modifying the new user message has no
+   prompt cache impact. Only modifications to historical context (earlier
+   messages already cached by the provider) invalidate the cache. This is a
+   structural advantage of operating before the provider: anything the user
+   sends in the current turn can be redacted, rewritten, or enriched
+   without cache penalties.
+
+The trade-off is latency. Every pre-request hook adds its execution time to
+the request path. Set tight timeouts and use `fail_policy` to control what
+happens when a hook is slow or unreachable.
+
+**Post-response hooks** fire *after* the LLM response completes. Aperture
+sends the payload and does not wait for or read your response
+(fire-and-forget). They cannot affect the request or response. Use them for
+logging, auditing, analytics, cost tracking, or triggering downstream
+workflows. They always fail open; a failing post-response hook never
+disrupts the user's request.
+
+| Dimension | Pre-request | Post-response |
+|---|---|---|
+| Timing | Before LLM provider | After response completes |
+| Synchronous | Yes (adds latency) | No (fire-and-forget) |
+| Can block requests | Yes | No |
+| Can modify requests | Yes (replaces `request_body`) | No |
+| Cache impact of modification | None for current-turn content; invalidates cache for historical context | N/A |
+| Failure behavior | Configurable: `fail_open` or `fail_closed` | Always fail open |
+| Response parsed | Yes (`GuardrailResponse`) | No (drained, ignored) |
+| Typical use cases | PII redaction, content policy, request enrichment | Logging, auditing, analytics, alerting |
+| Event types | `pre_request` | `entire_request`, `tool_call_entire_request` |
+
+Some integrations combine both modes. For example, a hook might enforce
+policy pre-request and log the full exchange post-response. These use the
+`additional_types` frontmatter field and are placed in the directory matching
+their primary type.
+
+> [!NOTE]
+> The cache advantage of pre-request hooks is structural: they operate on
+> content the provider has not yet received. Any future hook type that
+> operates on responses (after the provider has processed and cached the
+> input) would not share this property, and modifications at that stage
+> would always invalidate the cache.
+
 ## Event types
 
 Use these values in the `events` array of a `GrantSendHook`.
@@ -455,13 +510,19 @@ A `GuardrailResponse` must have an `action` field set to `"allow"`, `"block"`, o
 
 ## Cache impact of request modification
 
-Any modification to request content, even a single byte, invalidates the
-LLM provider's cache. The next request for the same content incurs a cache
-miss, which can cost up to 10x more. For Anthropic, the default cache TTL is
-5 minutes (extendable to 1 hour via header at 2x the base input token
-cost).
+Pre-request hooks run before the LLM provider receives the request.
+**Modifying the current turn's content (the new user message) has no cache
+impact** because the provider has not cached it yet. This is a key advantage
+of pre-request hooks.
 
-If your hook uses the `modify` action, document this tradeoff.
+However, modifying **historical context** (earlier messages in the
+conversation that the provider has already processed and cached) invalidates
+the provider's prompt cache. The next request incurs a cache miss, which can
+cost up to 10x more. For Anthropic, the default cache TTL is 5 minutes
+(extendable to 1 hour via header at 2x the base input token cost).
+
+If your hook uses the `modify` action and may alter historical context,
+document this tradeoff.
 
 > [!NOTE]
 > See [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration#hooks) in the Aperture documentation for the full hook specification and provider-specific details.
