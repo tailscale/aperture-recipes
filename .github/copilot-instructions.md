@@ -1,4 +1,4 @@
-# Copilot Instructions for aperture-catalog
+# Copilot Instructions for aperture-recipes
 
 ## What this repo is
 

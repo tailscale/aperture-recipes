@@ -5,7 +5,7 @@
 # See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 # Fallback: all files are owned by the Aperture integrations team.
-* @tailscale/aperture-catalog
+* @tailscale/aperture-recipes
 
 # Update this file when team structure changes (for example, new sub-teams
 # for specific integration categories or review areas).

@@ -182,7 +182,7 @@ async function checkUrl(url: string): Promise<BrokenLink | null> {
     return null; // Not a broken link; just excluded from checking
   }
 
-  const headers = { "User-Agent": "aperture-catalog-staleness-bot/1.0" };
+  const headers = { "User-Agent": "aperture-recipes-staleness-bot/1.0" };
 
   // HEAD request with its own timeout
   const headController = new AbortController();

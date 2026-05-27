@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for submitting an integration! This form mirrors the [integration template](https://github.com/tailscale/aperture-catalog/blob/main/templates/integration.md). After review, a maintainer may convert this into a PR on your behalf or ask you to open one.
+        Thanks for submitting an integration! This form mirrors the [integration template](https://github.com/tailscale/aperture-recipes/blob/main/templates/integration.md). After review, a maintainer may convert this into a PR on your behalf or ask you to open one.
 
         Only **Integration name**, **Integration type**, and **Summary** are required. Fill in as much as you can; the review team will work with you on any gaps.
 
@@ -15,7 +15,7 @@ body:
         - [Configuration reference](https://tailscale.com/docs/aperture/configuration): grants, hooks, providers, and quotas
         - [Guardrails guide](https://tailscale.com/docs/aperture/guardrails): conceptual guide to pre-request hooks
         - [Build a custom webhook](https://tailscale.com/docs/aperture/how-to/build-custom-webhook): step-by-step hook tutorial
-        - [Template README](https://github.com/tailscale/aperture-catalog/blob/main/templates/README.md): section-by-section guidance
+        - [Template README](https://github.com/tailscale/aperture-recipes/blob/main/templates/README.md): section-by-section guidance
 
   - type: input
     id: integration-name
@@ -67,7 +67,7 @@ body:
     id: tags
     attributes:
       label: Tags
-      description: "Comma-separated lowercase hyphenated tags for categorization. Refer to the [template README](https://github.com/tailscale/aperture-catalog/blob/main/templates/README.md#frontmatter-tags) for common values."
+      description: "Comma-separated lowercase hyphenated tags for categorization. Refer to the [template README](https://github.com/tailscale/aperture-recipes/blob/main/templates/README.md#frontmatter-tags) for common values."
       placeholder: "guardrail, security, pii-redaction"
     validations:
       required: false

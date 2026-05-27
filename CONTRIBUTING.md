@@ -1,4 +1,4 @@
-# Contributing to aperture-catalog
+# Contributing to aperture-recipes
 
 This document explains how to submit integration documentation to this repository and what to expect during the review process.
 

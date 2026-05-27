@@ -1,6 +1,6 @@
 # Project Context
 
-You are helping build and maintain `aperture-catalog`, a public GitHub repository under the Tailscale organization. This repo is the official submission surface for third-party Aperture integration documentation, examples, and templates.
+You are helping build and maintain `aperture-recipes`, a public GitHub repository under the Tailscale organization. This repo is the official submission surface for third-party Aperture integration documentation, examples, and templates.
 
 ## What is Aperture
 

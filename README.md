@@ -1,4 +1,4 @@
-# Aperture catalog
+# Aperture recipes
 
 This repository is the submission surface for third-party [Aperture](https://tailscale.com/aperture) integration documentation, examples, and templates. It is maintained by Tailscale's Aperture team.
 
