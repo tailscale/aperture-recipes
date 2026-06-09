@@ -1,11 +1,16 @@
 ---
-name: "tsheadroom"
-provider: "Tailscale"
-provider_url: "https://tailscale.com"
+name: tsheadroom
+provider: Tailscale
+provider_url: 'https://tailscale.com'
 integration_type: pre_request_hook
-status: official
-date_submitted: 2026-06-09
-tags: [compression, cost-optimization, context, tsnet, open-source]
+status: community
+date_submitted: '2026-06-09'
+tags:
+  - compression
+  - cost-optimization
+  - context
+  - tsnet
+  - open-source
 ---
 
 # tsheadroom
@@ -122,6 +127,9 @@ The `messages` array was compressed; every other field of the body is preserved.
 
 > [!NOTE]
 > **Cache impact**: tsheadroom compresses *older* context and protects the most recent turns, so a `modify` changes the cached prefix and can trigger a prompt-cache miss on the next turn (up to a 10x cost increase on that turn). For tool/log-heavy traffic the token savings typically dominate; for cache-heavy chat workloads, weigh this and scope `models` accordingly. Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details.
+
+> [!NOTE]
+> **Cache impact**: Modifying the current turn's content (the new user message) has no cache impact because the provider has not received it yet. However, modifying historical context (earlier messages already cached by the provider) invalidates the prompt cache (up to 10x cost increase). Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details. If your hook only uses `allow` and `block`, delete this callout.
 
 ## Verify the integration
 
