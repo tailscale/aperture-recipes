@@ -7,6 +7,13 @@ status: official
 date_submitted: 2026-05-24
 tags: [guardrail, security, pii-redaction]
 ---
+<!-- staleness-banner -->
+> [!WARNING]
+> This integration has been flagged as **stale**: some external links may be broken.
+> Refer to the tracking issue in this repository for details. If you maintain this
+> integration, please open a PR to fix the broken links.
+<!-- /staleness-banner -->
+
 
 # SSN Scrubber Guardrail
 

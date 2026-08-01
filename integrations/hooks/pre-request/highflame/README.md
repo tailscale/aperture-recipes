@@ -5,7 +5,7 @@ provider_url: 'https://highflame.ai'
 integration_type: pre_request_hook
 additional_types:
   - post_response_hook
-status: community
+status: deprecated
 date_submitted: '2026-05-24'
 tags:
   - security
@@ -13,6 +13,13 @@ tags:
   - policy-enforcement
   - tool-call-monitoring
 ---
+<!-- staleness-banner -->
+> [!WARNING]
+> This integration has been flagged as **stale**: some external links may be broken.
+> Refer to the tracking issue in this repository for details. If you maintain this
+> integration, please open a PR to fix the broken links.
+<!-- /staleness-banner -->
+
 
 # Highflame
 
