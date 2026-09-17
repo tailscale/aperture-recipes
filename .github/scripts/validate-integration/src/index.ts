@@ -11,7 +11,7 @@
  *   PR_NUMBER: pull request number
  *   PR_DATE: PR open date (YYYY-MM-DD)
  *   PR_AUTHOR: PR author login
- *   PR_AUTHOR_IS_ORG_MEMBER: "true" if author is org member
+ *   PR_AUTHOR_IS_TRUSTED: "true" for members, owners, or same-repository collaborators
  *   CHANGED_FILES: newline-separated list of changed files
  *   REPO_ROOT: absolute path to repo checkout
  */
@@ -45,13 +45,13 @@ export function validateContent(
   filePath: string,
   repoRoot: string,
   prDate: string,
-  isOrgMember: boolean,
+  isTrustedAuthor: boolean,
 ): ValidationResult {
   const allIssues: ValidationIssue[] = [];
   let currentContent = content;
   let anyModified = false;
 
-  const fmResult = validateFrontmatter(currentContent, filePath, prDate, isOrgMember);
+  const fmResult = validateFrontmatter(currentContent, filePath, prDate, isTrustedAuthor);
   allIssues.push(...fmResult.issues);
   if (fmResult.modified) {
     currentContent = fmResult.content;
@@ -92,7 +92,7 @@ export function validateFile(
   filePath: string,
   repoRoot: string,
   prDate: string,
-  isOrgMember: boolean,
+  isTrustedAuthor: boolean,
 ): ValidationResult {
   const absolutePath = path.join(repoRoot, filePath);
   let content: string;
@@ -114,7 +114,7 @@ export function validateFile(
     };
   }
 
-  return validateContent(content, filePath, repoRoot, prDate, isOrgMember);
+  return validateContent(content, filePath, repoRoot, prDate, isTrustedAuthor);
 }
 
 /** Format validation issues into a markdown PR comment. */
@@ -241,7 +241,7 @@ async function main(): Promise<void> {
   const prNumber = parseInt(process.env.PR_NUMBER || "0", 10);
   const prDate =
     process.env.PR_DATE || new Date().toISOString().slice(0, 10);
-  const isOrgMember = process.env.PR_AUTHOR_IS_ORG_MEMBER === "true";
+  const isTrustedAuthor = process.env.PR_AUTHOR_IS_TRUSTED === "true";
   const changedFilesRaw = process.env.CHANGED_FILES || "";
 
   const changedFiles = changedFilesRaw
@@ -263,7 +263,7 @@ async function main(): Promise<void> {
   const results: ValidationResult[] = [];
 
   for (const file of integrationFiles) {
-    const result = validateFile(file, repoRoot, prDate, isOrgMember);
+    const result = validateFile(file, repoRoot, prDate, isTrustedAuthor);
     results.push(result);
 
     // Write back modified files

@@ -33,13 +33,13 @@ export interface FrontmatterResult {
  * @param fileContent - Raw file content including frontmatter.
  * @param filePath - Path to the file (for issue reporting).
  * @param prDate - PR open date in YYYY-MM-DD format (for date_submitted fill).
- * @param isOrgMember - Whether the PR author is an org member (for status check).
+ * @param isTrustedAuthor - Whether the workflow trusts the PR author to set official status.
  */
 export function validateFrontmatter(
   fileContent: string,
   filePath: string,
   prDate: string,
-  isOrgMember: boolean,
+  isTrustedAuthor: boolean,
 ): FrontmatterResult {
   const issues: ValidationIssue[] = [];
   let modified = false;
@@ -196,11 +196,11 @@ export function validateFrontmatter(
       });
       data.status = "community";
       modified = true;
-    } else if (statusLower === "official" && !isOrgMember) {
+    } else if (statusLower === "official" && !isTrustedAuthor) {
       issues.push({
         file: filePath,
         message:
-          "Reset `status` from `official` to `community`. Only the Aperture team can set `official` status.",
+          "Reset `status` from `official` to `community`. Only trusted repository contributors can set `official` status.",
         fixed: true,
       });
       data.status = "community";

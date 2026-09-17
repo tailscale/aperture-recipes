@@ -52,25 +52,6 @@ jobs:
             echo "$CHANGED" > /tmp/changed_files.txt
           fi
 
-      - name: Check org membership
-        id: membership
-        if: steps.changed.outputs.has_files == 'true'
-        run: |
-          # Check if PR author is an org member
-          AUTHOR="${{ github.event.pull_request.user.login }}"
-          ORG="${{ github.repository_owner }}"
-
-          # Use the GitHub API to check membership; ignore errors (non-members return 404)
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/orgs/$ORG/members/$AUTHOR") || true
-
-          if [ "$STATUS" = "204" ]; then
-            echo "is_org_member=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "is_org_member=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -96,7 +77,11 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_DATE: ${{ github.event.pull_request.created_at }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          PR_AUTHOR_IS_ORG_MEMBER: ${{ steps.membership.outputs.is_org_member }}
+          # Trust GitHub's association metadata; collaborators must use a branch in this repository.
+          PR_AUTHOR_IS_TRUSTED: >-
+            ${{ contains(fromJSON('["MEMBER", "OWNER"]'), github.event.pull_request.author_association) ||
+                (github.event.pull_request.author_association == 'COLLABORATOR' &&
+                 github.event.pull_request.head.repo.full_name == github.repository) }}
           REPO_ROOT: ${{ github.workspace }}
         run: |
           # Pass changed files via environment variable

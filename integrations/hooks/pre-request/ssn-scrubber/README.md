@@ -1,14 +1,11 @@
 ---
-name: SSN Scrubber Guardrail
-provider: Tailscale
-provider_url: 'https://tailscale.com'
+name: "SSN Scrubber Guardrail"
+provider: "Tailscale"
+provider_url: "https://tailscale.com"
 integration_type: pre_request_hook
-status: community
-date_submitted: '2026-05-24'
-tags:
-  - guardrail
-  - security
-  - pii-redaction
+status: official
+date_submitted: 2026-05-24
+tags: [guardrail, security, pii-redaction]
 ---
 
 # SSN Scrubber Guardrail
