@@ -5,7 +5,8 @@
   "description": "Validates and auto-fixes Aperture integration submissions",
   "type": "module",
   "scripts": {
-    "validate": "npx tsx src/index.ts"
+    "validate": "tsx src/index.ts",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",

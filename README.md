@@ -52,8 +52,12 @@ Each integration lives in its own directory. The `README.md` is the required ent
 
 ## Example submissions
 
-- [`ssn-scrubber`](integrations/hooks/pre-request/ssn-scrubber/):  A pre-request guardrail that detects and redacts SSNs from prompts before they reach the LLM provider.
+- [`ssn-scrubber`](integrations/hooks/pre-request/ssn-scrubber/):  A pre-request protocol and configuration example for a contributor-hosted endpoint that detects and redacts or blocks SSN-shaped text.
 - [`highflame`](integrations/hooks/pre-request/highflame/):  A security and observability platform that supports both pre-request enforcement and post-response observability. Dual-type integration using `additional_types`.
+- [`tsheadroom`](integrations/hooks/pre-request/tsheadroom/):  A pre-request hook that compresses bulky request content before it reaches the LLM provider.
+- [Cribl](integrations/hooks/post-response/cribl/):  A post-response hook that sends completed request events to a Cribl webhook source for processing and routing.
+- [OpenRouter](integrations/providers/openrouter/):  A provider integration for routing OpenAI-compatible chat completion requests through Aperture to OpenRouter.
+- [OpenCode](integrations/tools/opencode/):  A tool integration for routing OpenCode LLM requests through Aperture.
 
 ## Resources
 

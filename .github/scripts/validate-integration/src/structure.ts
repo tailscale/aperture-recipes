@@ -20,6 +20,7 @@ import {
   HOOK_TYPES,
   HOOK_ONLY_SECTIONS,
   PRE_REQUEST_ONLY_SECTIONS,
+  NON_HOOK_SECTIONS,
   type IntegrationType,
   type ValidationIssue,
 } from "./types.js";
@@ -210,13 +211,16 @@ export function validateStructure(
   }
 
   if (hasNonHookType) {
-    // Non-hook types require "Aperture configuration"
-    const section = "Aperture configuration";
-    if (
-      !existingNormalized.includes(normalizeHeading(section)) &&
-      !missingSections.includes(section)
-    ) {
-      missingSections.push(section);
+    for (const type of ["provider", "tool"] as const) {
+      if (!allTypes.includes(type)) continue;
+      for (const section of NON_HOOK_SECTIONS[type]) {
+        if (
+          !existingNormalized.includes(normalizeHeading(section)) &&
+          !missingSections.includes(section)
+        ) {
+          missingSections.push(section);
+        }
+      }
     }
   }
 

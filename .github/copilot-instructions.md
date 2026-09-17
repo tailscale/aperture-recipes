@@ -20,7 +20,7 @@ templates/
 docs/
   protocol-reference.md  # Webhook protocol spec (HookCallData, GuardrailResponse, etc.)
 .github/
-  scripts/validate-integration/  # Deterministic validation CI (structure, callouts, links)
+  scripts/validate-integration/  # Deterministic validation CI and semantic fixtures
   workflows/validate-integration.yml  # CI workflow for auto-fix validation
 ```
 
@@ -40,9 +40,10 @@ docs/
 
 ## Validation
 
-The repo has one CI workflow (`validate-integration.yml`) that runs deterministic checks on PRs touching `integrations/`:
+The repo has one CI workflow (`validate-integration.yml`) that tests the validator when integration, template, protocol, validator, or workflow files change. For changed integration READMEs it also runs deterministic submission checks:
 
 - **Structure**: verifies correct directory placement and required H2 sections
+- **Semantics**: verifies hook, provider, grant, event, and `send` fields; type compatibility; substantive sections; and verification instructions
 - **Callouts**: injects missing `dst` key warning and cache impact note where required
 - **Links**: checks that internal relative links resolve to existing files
 
@@ -61,13 +62,13 @@ All integrations: Summary, Prerequisites, Setup and configuration, Verify the in
 
 Hook integrations (`pre_request_hook`, `post_response_hook`) additionally require: Hook definition, Grant wiring. Pre-request hooks also require: Hook response format.
 
-Non-hook integrations (`provider`, `tool`) use a single Aperture configuration section instead of the hook-specific sections.
+Provider integrations use **Aperture provider configuration** and **Grant access to provider models**. Tool integrations use **Tool configuration** and **Grant access to the tool's models**. Provider configuration defines the upstream in the `providers` map; tool configuration points the external client at Aperture. Grants authorize model access but do not configure either integration.
 
 Optional sections (delete if not applicable): Troubleshooting, Security considerations, Reference.
 
 ## Two critical gotchas reviewers must check
 
-1. **`dst` key in grants**: Tailnet grants require an explicit `dst` key. Omitting it causes the grant to silently apply to nothing. Any submission with grant examples must warn about this.
+1. **`dst` key in grants**: Tailnet policy grants require an explicit `dst` key. Omitting it causes the grant to silently apply to nothing. Config-file grants omit `dst`. Every complete example must identify which location it uses.
 
 2. **Cache impact of `modify` action**: Pre-request hooks that use the `modify` action can affect the LLM provider's prompt cache, but only when modifying historical context (earlier messages already cached by the provider). Modifying the current turn's content has no cache impact. Any pre-request hook mentioning `modify` must include the cache impact callout explaining this distinction.
 

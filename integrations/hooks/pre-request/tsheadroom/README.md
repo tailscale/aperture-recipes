@@ -33,7 +33,7 @@ tsheadroom is open source. This page is a quick-start summary; the full document
 
 - A running [Aperture](https://tailscale.com/docs/aperture) instance with at least one LLM provider configured, and access to edit its configuration (`config.hujson`) and/or your tailnet policy file.
 - A Tailscale tailnet (you have one if you run Aperture) and a Tailscale [auth key](https://tailscale.com/docs/features/access-control/auth-keys) so the device can join unattended.
-- A Linux host (the binary also builds on macOS for local development) with Go 1.26.4+ to build, and Python 3.10–3.13 with `headroom-ai` installed. See the repository's [Requirements](https://github.com/tailscale/tsheadroom#requirements) for version details and the tool-output-only vs. text-compression install choice.
+- A Linux host (the binary also builds on macOS for local development) with Go 1.26.4+ to build, and Python 3.10 or newer with `headroom-ai` installed. See the repository's [Requirements](https://github.com/tailscale/tsheadroom#requirements) for version details and the tool-output-only vs. text-compression install choice.
 
 ## Setup and configuration
 
@@ -126,17 +126,22 @@ Nothing changed; the original request proceeds. Returned for short or chat-only 
 The `messages` array was compressed; every other field of the body is preserved. The modified body **replaces** what Aperture would have sent. Requires `"request_body"` in the grant's `send` list.
 
 > [!NOTE]
-> **Cache impact**: tsheadroom compresses *older* context and protects the most recent turns, so a `modify` changes the cached prefix and can trigger a prompt-cache miss on the next turn (up to a 10x cost increase on that turn). For tool/log-heavy traffic the token savings typically dominate; for cache-heavy chat workloads, weigh this and scope `models` accordingly. Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details.
-
-> [!NOTE]
-> **Cache impact**: Modifying the current turn's content (the new user message) has no cache impact because the provider has not received it yet. However, modifying historical context (earlier messages already cached by the provider) invalidates the prompt cache (up to 10x cost increase). Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details. If your hook only uses `allow` and `block`, delete this callout.
+> **Cache impact**: tsheadroom compresses *older* context and protects the most recent turns, so a `modify` changes the cached prefix and can trigger a prompt-cache miss on the next turn. Affected input tokens may then be billed at uncached rates. For tool/log-heavy traffic the token savings typically dominate; for cache-heavy chat workloads, weigh this and scope `models` accordingly. Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details.
 
 ## Verify the integration
 
 Verify locally first, then end-to-end through Aperture. Full commands and the annotated log output are in the repository's [Verify it's working](https://github.com/tailscale/tsheadroom#verify-its-working) section.
 
 1. **Locally**: run with `-local-addr 127.0.0.1:8080 -v` (plain HTTP, per-request logging, no tailnet) and POST a request carrying a large `tool_result`. tsheadroom replies `{"action":"modify",…}` with `out_bytes < in_bytes` in the log line. The first request may take ~60s while the ML model loads; subsequent requests return in milliseconds.
-1. **Inverse check**: POST a short chat message; tsheadroom replies `{"action":"allow"}` (nothing worth compressing).
+1. **Inverse check**: POST a short chat message:
+
+   ```bash
+   curl -sS -X POST http://127.0.0.1:8080/ \
+     -H 'Content-Type: application/json' \
+     -d '{"request_body":{"model":"claude-sonnet-4-5-20250929","messages":[{"role":"user","content":"hi"}]}}'
+   ```
+
+   The expected response is `{"action":"allow"}` (nothing worth compressing). The check passes only if the response matches that JSON; any other response fails.
 1. **End-to-end**: with the hook and grant live, make a real Aperture call that includes a substantial tool result (or run a coding-agent session). On the device, watch `-v` output or `journalctl -u tsheadroom -f`. A request that compresses logs `-> modify` with `out_bytes < in_bytes`.
 
 ## Troubleshooting
@@ -150,7 +155,7 @@ All `allow`, no `modify`? Work down this list. The repository's [Nothing compres
 | Requests arrive but always `allow(noop)` | Nothing worth compressing (short chat, prose-only, no substantial tool result) | Correct behavior. See [What gets compressed](https://github.com/tailscale/tsheadroom#what-gets-compressed). |
 | Text/prose not shrinking | `[ml]` extra not installed, or `compress_user_messages` off | Install `headroom-ai[ml]` and check `GET /config`. |
 | Occasional `allow(error)` under load or on first request | Compression exceeded Aperture's hook `timeout` and failed open | Raise `timeout`, or pre-warm the model to avoid the cold-start load. |
-| `pip install` fails building `headroom-ai` | Python version too new for a published wheel | Recreate the venv on a supported version (3.10–3.13). See [Install fails building headroom-ai](https://github.com/tailscale/tsheadroom#install-fails-building-headroom-ai). |
+| `pip install` fails building `headroom-ai` | The Python version or build environment is unsupported | Recreate the venv with a version listed in the upstream requirements. See [Install fails building headroom-ai](https://github.com/tailscale/tsheadroom#install-fails-building-headroom-ai). |
 
 ## Security considerations
 

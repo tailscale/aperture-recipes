@@ -231,7 +231,9 @@ export function validateFrontmatter(
         fixed: false,
       });
     } else {
-      for (const t of data.additional_types) {
+      const additionalTypes = data.additional_types;
+      const normalizedTypes: string[] = [];
+      for (const t of additionalTypes) {
         const val = String(t).trim().toLowerCase();
         if (
           !VALID_INTEGRATION_TYPES.includes(
@@ -243,7 +245,16 @@ export function validateFrontmatter(
             message: `Invalid value in \`additional_types\`: \`${t}\`. Must be one of: \`pre_request_hook\`, \`post_response_hook\`, \`provider\`, \`tool\`.`,
             fixed: false,
           });
+        } else {
+          normalizedTypes.push(val);
         }
+      }
+      if (
+        normalizedTypes.length === additionalTypes.length &&
+        normalizedTypes.some((value, index) => value !== additionalTypes[index])
+      ) {
+        data.additional_types = normalizedTypes;
+        modified = true;
       }
     }
   }

@@ -70,6 +70,29 @@ If you forget to sign off, you can amend your most recent commit with `git commi
 1. Commit with `--signoff` and push to your fork.
 1. Open a pull request against the `main` branch. The PR description should briefly summarize what the integration does.
 
+### Validate locally
+
+The integration validator requires Node.js 22. From a fresh checkout, install its locked dependencies before running it:
+
+```bash
+cd .github/scripts/validate-integration
+npm ci --ignore-scripts
+```
+
+The validator has no argument-based CLI. Set `CHANGED_FILES` to a newline-separated list of integration `README.md` paths and `REPO_ROOT` to the repository root, then run the package's validation script:
+
+```bash
+CHANGED_FILES='integrations/hooks/pre-request/your-integration/README.md' \
+REPO_ROOT="$(git rev-parse --show-toplevel)" \
+npm run validate
+```
+
+No credentials are needed for local validation. The validator checks frontmatter, type-aware structure and directory placement, hook and grant fields, event and `send` compatibility, required section content, verification steps, required callouts, and internal relative links. It can modify listed files in place: it normalizes some frontmatter and adds missing required sections or callouts. Review `git diff` after it runs and complete any inserted TODO sections. It exits unsuccessfully for issues it cannot fix, including invalid or missing frontmatter, incorrect directory placement, unresolved placeholders, incompatible configuration fields, weak verification, and broken internal links.
+
+Run `npm test` and `npx tsc --noEmit` from the same directory to check the validator and all four integration-type fixtures. Do not pass integration paths as arguments; tests and validation use the package scripts and the environment variables shown above.
+
+For branches in this repository, CI can commit and push its auto-fixes. GitHub cannot push those fixes to a contributor's fork. Fork contributors must run the validator locally or inspect the workflow output and artifact, then apply and push the changes themselves.
+
 ### Issue path (fallback)
 
 If you are not comfortable with pull requests, use the integration submission issue form in this repository's Issues tab. Provide the same information the template asks for, and the review team will help create the PR on your behalf.
@@ -80,10 +103,12 @@ Submissions must meet the following minimum standard:
 
 - Follow the template structure with all required sections filled out.
 - Include working inline code examples (configuration snippets, sample API calls, expected responses).
-- Provide copy-pasteable configuration snippets for the integration-specific pieces (hook endpoint, `send_hooks` wiring). These do not need to be complete Aperture configurations. Show enough that a developer with an existing Aperture setup can adapt the example.
+- Provide copy-pasteable configuration snippets for the integration-specific pieces. For hooks, include the endpoint and `send_hooks` wiring. For providers, include the `providers` map entry. For tools, include the external tool's verified client settings. These do not need to be complete configurations; show enough that a developer with an existing Aperture setup can adapt the example.
 - Fill in all required frontmatter fields with accurate values.
 - Be written clearly enough that another developer can set up the integration by following the documentation alone.
 - For hook integrations: include a valid hook definition (`hooks` map entry) and grant wiring (`send_hooks` entry) with valid `send` field values. Refer to the [protocol quick reference](docs/protocol-reference.md) for the specification.
+- For hook integrations: test delivery to the contributor-hosted endpoint and document control and trigger cases with observable pass criteria. This repository does not supply or host hook endpoints.
+- For provider and tool integrations: document setup and verification steps appropriate to that integration type; hook-specific configuration and tests are not required.
 - If the same hook may appear in multiple grants, note that `events` and `send` lists are merged (union) and the hook fires once per request.
 
 Submissions that are missing required sections or include placeholder content will be sent back for revision.

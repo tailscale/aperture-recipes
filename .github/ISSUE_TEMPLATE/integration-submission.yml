@@ -107,7 +107,9 @@ body:
 
         **Hook integrations** (`pre_request_hook`, `post_response_hook`): fill in *Hook definition* and *Grant wiring* below. Refer to the [hook configuration reference](https://tailscale.com/docs/aperture/configuration#hooks) for the full field list.
 
-        **Provider and tool integrations**: skip *Hook definition*, and use *Grant wiring* to show your [grant configuration](https://tailscale.com/docs/aperture/configuration#grants).
+        **Provider integrations**: skip the hook fields. In *Setup and configuration*, clearly label **Aperture provider configuration** with the top-level `providers` map entry. In *Grant wiring or model access*, label the grant **Grant access to provider models**.
+
+        **Tool integrations**: skip the hook fields. In *Setup and configuration*, clearly label **Tool configuration** with the tool's verified settings for pointing its API base URL at Aperture. In *Grant wiring or model access*, label the grant **Grant access to the tool's models**.
 
   - type: textarea
     id: hook-definition
@@ -121,10 +123,10 @@ body:
   - type: textarea
     id: grant-wiring
     attributes:
-      label: Grant wiring
+      label: Grant wiring or model access
       description: |
         For hook integrations: the `send_hooks` entry that activates the hook. Include only the events and send values this integration needs.
-        For provider/tool integrations: the relevant [grant configuration](https://tailscale.com/docs/aperture/configuration#grants).
+        For provider/tool integrations: any relevant [model-access grant](https://tailscale.com/docs/aperture/configuration#grants). Grants authorize access; they do not configure a provider or external tool.
         Note: [tailnet policy grants](https://tailscale.com/kb/1337/acl-syntax#grants) require an explicit `dst` key. Omitting it causes the grant to silently apply to nothing. Config-file grants do not use `dst`.
       render: markdown
     validations:

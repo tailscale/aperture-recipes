@@ -18,16 +18,18 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { pathToFileURL } from "node:url";
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { validateFrontmatter } from "./frontmatter.js";
 import { validateStructure } from "./structure.js";
 import { validateCallouts } from "./callouts.js";
 import { validateLinks } from "./links.js";
+import { validateSemantics } from "./semantics.js";
 import type { ValidationIssue, ValidationResult } from "./types.js";
 
 /** Filter changed files to only README.md files under integrations/. */
-function getIntegrationFiles(changedFiles: string[]): string[] {
+export function getIntegrationFiles(changedFiles: string[]): string[] {
   return changedFiles.filter((f) => {
     const normalized = f.replace(/\\/g, "/");
     return (
@@ -38,7 +40,55 @@ function getIntegrationFiles(changedFiles: string[]): string[] {
 }
 
 /** Run all validation checks on a single integration file. */
-function validateFile(
+export function validateContent(
+  content: string,
+  filePath: string,
+  repoRoot: string,
+  prDate: string,
+  isOrgMember: boolean,
+): ValidationResult {
+  const allIssues: ValidationIssue[] = [];
+  let currentContent = content;
+  let anyModified = false;
+
+  const fmResult = validateFrontmatter(currentContent, filePath, prDate, isOrgMember);
+  allIssues.push(...fmResult.issues);
+  if (fmResult.modified) {
+    currentContent = fmResult.content;
+    anyModified = true;
+  }
+
+  const structResult = validateStructure(
+    currentContent,
+    filePath,
+    fmResult.data.integration_type,
+    fmResult.data.additional_types,
+  );
+  allIssues.push(...structResult.issues);
+  if (structResult.modified) {
+    currentContent = structResult.content;
+    anyModified = true;
+  }
+
+  const calloutsResult = validateCallouts(
+    currentContent,
+    filePath,
+    fmResult.data.integration_type,
+    fmResult.data.additional_types,
+  );
+  allIssues.push(...calloutsResult.issues);
+  if (calloutsResult.modified) {
+    currentContent = calloutsResult.content;
+    anyModified = true;
+  }
+
+  allIssues.push(...validateSemantics(currentContent, filePath, fmResult.data).issues);
+  allIssues.push(...validateLinks(currentContent, filePath, repoRoot).issues);
+
+  return { file: filePath, issues: allIssues, modified: anyModified, content: currentContent };
+}
+
+export function validateFile(
   filePath: string,
   repoRoot: string,
   prDate: string,
@@ -64,58 +114,7 @@ function validateFile(
     };
   }
 
-  const allIssues: ValidationIssue[] = [];
-  let currentContent = content;
-  let anyModified = false;
-
-  // 1. Frontmatter validation
-  const fmResult = validateFrontmatter(
-    currentContent,
-    filePath,
-    prDate,
-    isOrgMember,
-  );
-  allIssues.push(...fmResult.issues);
-  if (fmResult.modified) {
-    currentContent = fmResult.content;
-    anyModified = true;
-  }
-
-  // 2. Structure (directory + sections): uses updated content
-  const structResult = validateStructure(
-    currentContent,
-    filePath,
-    fmResult.data.integration_type,
-    fmResult.data.additional_types,
-  );
-  allIssues.push(...structResult.issues);
-  if (structResult.modified) {
-    currentContent = structResult.content;
-    anyModified = true;
-  }
-
-  // 3. Callouts: uses updated content
-  const calloutsResult = validateCallouts(
-    currentContent,
-    filePath,
-    fmResult.data.integration_type,
-  );
-  allIssues.push(...calloutsResult.issues);
-  if (calloutsResult.modified) {
-    currentContent = calloutsResult.content;
-    anyModified = true;
-  }
-
-  // 4. Links: comment only, no modifications
-  const linksResult = validateLinks(currentContent, filePath, repoRoot);
-  allIssues.push(...linksResult.issues);
-
-  return {
-    file: filePath,
-    issues: allIssues,
-    modified: anyModified,
-    content: currentContent,
-  };
+  return validateContent(content, filePath, repoRoot, prDate, isOrgMember);
 }
 
 /** Format validation issues into a markdown PR comment. */
@@ -320,7 +319,9 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  core.setFailed(`Validation script failed: ${err}`);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    core.setFailed(`Validation script failed: ${err}`);
+    process.exit(1);
+  });
+}

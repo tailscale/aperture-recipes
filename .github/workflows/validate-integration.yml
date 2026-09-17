@@ -4,6 +4,15 @@ on:
   pull_request:
     paths:
       - 'integrations/**'
+      - 'templates/**'
+      - 'docs/protocol-reference.md'
+      - 'CONTRIBUTING.md'
+      - '.github/ISSUE_TEMPLATE/integration-submission.yml'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.github/copilot-instructions.md'
+      - '.github/instructions/integration-review.instructions.md'
+      - '.github/scripts/validate-integration/**'
+      - '.github/workflows/validate-integration.yml'
     types: [opened, synchronize]
 
 permissions:
@@ -63,15 +72,21 @@ jobs:
           fi
 
       - name: Setup Node.js
-        if: steps.changed.outputs.has_files == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
       - name: Install dependencies
-        if: steps.changed.outputs.has_files == 'true'
         working-directory: .github/scripts/validate-integration
         run: npm ci --ignore-scripts
+
+      - name: Test validator
+        working-directory: .github/scripts/validate-integration
+        run: npm test
+
+      - name: Typecheck validator
+        working-directory: .github/scripts/validate-integration
+        run: npx tsc --noEmit
 
       - name: Run validation
         if: steps.changed.outputs.has_files == 'true'

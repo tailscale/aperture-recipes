@@ -43,16 +43,15 @@ export const TYPE_NORMALIZATIONS: Record<string, IntegrationType> = {
  * Required section groups for all integration types.
  *
  * Each inner array lists acceptable heading names; the file must have at least
- * one heading from each group. The first name is the preferred name used in the
- * template and auto-fix stubs. Later names are legacy alternatives accepted for
- * backward compatibility with existing submissions.
+ * one heading from each group. Type-specific checks below select the canonical
+ * heading used in auto-fix stubs; these groups prevent duplicate generic stubs.
  */
 export const REQUIRED_SECTION_GROUPS: string[][] = [
   ["Summary"],
   ["Prerequisites"],
   ["Setup and configuration"],
-  ["Hook definition", "Aperture configuration", "Hook configuration"],
-  ["Grant wiring", "Aperture configuration"],
+  ["Hook definition", "Aperture provider configuration", "Tool configuration", "Aperture configuration", "Hook configuration"],
+  ["Grant wiring", "Grant access to provider models", "Grant access to the tool's models", "Aperture configuration"],
   ["Verify the integration", "Testing"],
   ["Maintenance and support"],
 ];
@@ -78,6 +77,12 @@ export const HOOK_ONLY_SECTIONS: string[] = [
 export const PRE_REQUEST_ONLY_SECTIONS: string[] = [
   "Hook response format",
 ];
+
+/** Required configuration sections for non-hook integration types. */
+export const NON_HOOK_SECTIONS: Record<"provider" | "tool", string[]> = {
+  provider: ["Aperture provider configuration", "Grant access to provider models"],
+  tool: ["Tool configuration", "Grant access to the tool's models"],
+};
 
 /** Frontmatter fields and whether they are required. */
 export interface IntegrationFrontmatter {
