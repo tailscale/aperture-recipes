@@ -3,7 +3,7 @@ name: "SSN Scrubber Guardrail"
 provider: "Tailscale"
 provider_url: "https://tailscale.com"
 integration_type: pre_request_hook
-status: official
+status: deprecated
 date_submitted: 2026-05-24
 tags: [guardrail, security, pii-redaction]
 ---
