@@ -33,13 +33,13 @@ export interface FrontmatterResult {
  * @param fileContent - Raw file content including frontmatter.
  * @param filePath - Path to the file (for issue reporting).
  * @param prDate - PR open date in YYYY-MM-DD format (for date_submitted fill).
- * @param isOrgMember - Whether the PR author is an org member (for status check).
+ * @param isTrustedAuthor - Whether the workflow trusts the PR author to set official status.
  */
 export function validateFrontmatter(
   fileContent: string,
   filePath: string,
   prDate: string,
-  isOrgMember: boolean,
+  isTrustedAuthor: boolean,
 ): FrontmatterResult {
   const issues: ValidationIssue[] = [];
   let modified = false;
@@ -196,11 +196,11 @@ export function validateFrontmatter(
       });
       data.status = "community";
       modified = true;
-    } else if (statusLower === "official" && !isOrgMember) {
+    } else if (statusLower === "official" && !isTrustedAuthor) {
       issues.push({
         file: filePath,
         message:
-          "Reset `status` from `official` to `community`. Only the Aperture team can set `official` status.",
+          "Reset `status` from `official` to `community`. Only trusted repository contributors can set `official` status.",
         fixed: true,
       });
       data.status = "community";
@@ -231,7 +231,9 @@ export function validateFrontmatter(
         fixed: false,
       });
     } else {
-      for (const t of data.additional_types) {
+      const additionalTypes = data.additional_types;
+      const normalizedTypes: string[] = [];
+      for (const t of additionalTypes) {
         const val = String(t).trim().toLowerCase();
         if (
           !VALID_INTEGRATION_TYPES.includes(
@@ -243,7 +245,16 @@ export function validateFrontmatter(
             message: `Invalid value in \`additional_types\`: \`${t}\`. Must be one of: \`pre_request_hook\`, \`post_response_hook\`, \`provider\`, \`tool\`.`,
             fixed: false,
           });
+        } else {
+          normalizedTypes.push(val);
         }
+      }
+      if (
+        normalizedTypes.length === additionalTypes.length &&
+        normalizedTypes.some((value, index) => value !== additionalTypes[index])
+      ) {
+        data.additional_types = normalizedTypes;
+        modified = true;
       }
     }
   }

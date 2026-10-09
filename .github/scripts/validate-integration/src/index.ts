@@ -11,23 +11,25 @@
  *   PR_NUMBER: pull request number
  *   PR_DATE: PR open date (YYYY-MM-DD)
  *   PR_AUTHOR: PR author login
- *   PR_AUTHOR_IS_ORG_MEMBER: "true" if author is org member
+ *   PR_AUTHOR_IS_TRUSTED: "true" for members, owners, or same-repository collaborators
  *   CHANGED_FILES: newline-separated list of changed files
  *   REPO_ROOT: absolute path to repo checkout
  */
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { pathToFileURL } from "node:url";
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { validateFrontmatter } from "./frontmatter.js";
 import { validateStructure } from "./structure.js";
 import { validateCallouts } from "./callouts.js";
 import { validateLinks } from "./links.js";
+import { validateSemantics } from "./semantics.js";
 import type { ValidationIssue, ValidationResult } from "./types.js";
 
 /** Filter changed files to only README.md files under integrations/. */
-function getIntegrationFiles(changedFiles: string[]): string[] {
+export function getIntegrationFiles(changedFiles: string[]): string[] {
   return changedFiles.filter((f) => {
     const normalized = f.replace(/\\/g, "/");
     return (
@@ -38,11 +40,59 @@ function getIntegrationFiles(changedFiles: string[]): string[] {
 }
 
 /** Run all validation checks on a single integration file. */
-function validateFile(
+export function validateContent(
+  content: string,
   filePath: string,
   repoRoot: string,
   prDate: string,
-  isOrgMember: boolean,
+  isTrustedAuthor: boolean,
+): ValidationResult {
+  const allIssues: ValidationIssue[] = [];
+  let currentContent = content;
+  let anyModified = false;
+
+  const fmResult = validateFrontmatter(currentContent, filePath, prDate, isTrustedAuthor);
+  allIssues.push(...fmResult.issues);
+  if (fmResult.modified) {
+    currentContent = fmResult.content;
+    anyModified = true;
+  }
+
+  const structResult = validateStructure(
+    currentContent,
+    filePath,
+    fmResult.data.integration_type,
+    fmResult.data.additional_types,
+  );
+  allIssues.push(...structResult.issues);
+  if (structResult.modified) {
+    currentContent = structResult.content;
+    anyModified = true;
+  }
+
+  const calloutsResult = validateCallouts(
+    currentContent,
+    filePath,
+    fmResult.data.integration_type,
+    fmResult.data.additional_types,
+  );
+  allIssues.push(...calloutsResult.issues);
+  if (calloutsResult.modified) {
+    currentContent = calloutsResult.content;
+    anyModified = true;
+  }
+
+  allIssues.push(...validateSemantics(currentContent, filePath, fmResult.data).issues);
+  allIssues.push(...validateLinks(currentContent, filePath, repoRoot).issues);
+
+  return { file: filePath, issues: allIssues, modified: anyModified, content: currentContent };
+}
+
+export function validateFile(
+  filePath: string,
+  repoRoot: string,
+  prDate: string,
+  isTrustedAuthor: boolean,
 ): ValidationResult {
   const absolutePath = path.join(repoRoot, filePath);
   let content: string;
@@ -64,58 +114,7 @@ function validateFile(
     };
   }
 
-  const allIssues: ValidationIssue[] = [];
-  let currentContent = content;
-  let anyModified = false;
-
-  // 1. Frontmatter validation
-  const fmResult = validateFrontmatter(
-    currentContent,
-    filePath,
-    prDate,
-    isOrgMember,
-  );
-  allIssues.push(...fmResult.issues);
-  if (fmResult.modified) {
-    currentContent = fmResult.content;
-    anyModified = true;
-  }
-
-  // 2. Structure (directory + sections): uses updated content
-  const structResult = validateStructure(
-    currentContent,
-    filePath,
-    fmResult.data.integration_type,
-    fmResult.data.additional_types,
-  );
-  allIssues.push(...structResult.issues);
-  if (structResult.modified) {
-    currentContent = structResult.content;
-    anyModified = true;
-  }
-
-  // 3. Callouts: uses updated content
-  const calloutsResult = validateCallouts(
-    currentContent,
-    filePath,
-    fmResult.data.integration_type,
-  );
-  allIssues.push(...calloutsResult.issues);
-  if (calloutsResult.modified) {
-    currentContent = calloutsResult.content;
-    anyModified = true;
-  }
-
-  // 4. Links: comment only, no modifications
-  const linksResult = validateLinks(currentContent, filePath, repoRoot);
-  allIssues.push(...linksResult.issues);
-
-  return {
-    file: filePath,
-    issues: allIssues,
-    modified: anyModified,
-    content: currentContent,
-  };
+  return validateContent(content, filePath, repoRoot, prDate, isTrustedAuthor);
 }
 
 /** Format validation issues into a markdown PR comment. */
@@ -242,7 +241,7 @@ async function main(): Promise<void> {
   const prNumber = parseInt(process.env.PR_NUMBER || "0", 10);
   const prDate =
     process.env.PR_DATE || new Date().toISOString().slice(0, 10);
-  const isOrgMember = process.env.PR_AUTHOR_IS_ORG_MEMBER === "true";
+  const isTrustedAuthor = process.env.PR_AUTHOR_IS_TRUSTED === "true";
   const changedFilesRaw = process.env.CHANGED_FILES || "";
 
   const changedFiles = changedFilesRaw
@@ -264,7 +263,7 @@ async function main(): Promise<void> {
   const results: ValidationResult[] = [];
 
   for (const file of integrationFiles) {
-    const result = validateFile(file, repoRoot, prDate, isOrgMember);
+    const result = validateFile(file, repoRoot, prDate, isTrustedAuthor);
     results.push(result);
 
     // Write back modified files
@@ -320,7 +319,9 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  core.setFailed(`Validation script failed: ${err}`);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    core.setFailed(`Validation script failed: ${err}`);
+    process.exit(1);
+  });
+}

@@ -147,7 +147,7 @@ Use `pre_request` when Highflame should make an allow/block decision before Aper
   {
     "name": "highflame",
     "events": ["pre_request"],
-    "send": ["user_message", "request_body", "tools"]
+    "send": ["user_message", "request_body"]
   }
 ]
 ```
@@ -253,10 +253,10 @@ If you do not see expected results:
 
 ## Security considerations
 
-- **Highflame receives plaintext content.** Depending on your `send` configuration, Highflame may receive the full request body, response body, user messages, and tool definitions. Evaluate whether this is acceptable under your data handling policies.
+- **Highflame receives plaintext content.** Depending on your `send` configuration, Highflame may receive the full request body (including tool definitions), response body, user messages, and response-extracted tool calls. Evaluate whether this is acceptable under your data handling policies.
 - **API key handling.** The Highflame API key is stored in the Aperture config file and sent with every hook request. Treat the config file as sensitive. Rotate the key in Highflame and update the Aperture config if you suspect compromise.
 - **Network path.** Hook traffic from Aperture to Highflame traverses the public internet (unless you have a private connectivity arrangement). The endpoint uses HTTPS, so the payload is encrypted in transit.
-- **Data scope control.** Use the `send` array to limit what data Highflame receives. For pre-request enforcement, `user_message`, `request_body`, and `tools` are typically sufficient. Only add `response_body` and `raw_responses` for async observability where you need full audit context.
+- **Data scope control.** Use the `send` array to limit what data Highflame receives. For pre-request enforcement, `user_message` and `request_body` are typically sufficient. Add `tools`, `response_body`, and `raw_responses` only for async observability where you need tool-call or full audit context.
 
 ## Maintenance and support
 

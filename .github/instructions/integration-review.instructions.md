@@ -39,9 +39,9 @@ The Security considerations section should address:
 
 ## Technical accuracy checks
 
-### TECH-1: Grant has dst key
+### TECH-1: Grant uses dst for the correct location
 
-Every tailnet grant example MUST include a `dst` key. Omitting it causes the grant to silently apply to nothing -- no error, no warning. Find every JSON code block containing `"grants"` and verify each grant object has a `"dst"` field. This is the single most common configuration mistake.
+Every tailnet policy grant example MUST include a `dst` key. Omitting it causes the grant to silently apply to nothing -- no error, no warning. Aperture config-file grants omit `dst`. Find every complete grant example, confirm its location is identified, and verify `dst` matches that location.
 
 ### TECH-2: events match integration type
 
@@ -82,6 +82,7 @@ Valid hook config fields: `url`, `apikey`, `authorization`, `timeout`, `fail_pol
 
 - curl command URLs should match the hook config URL
 - Field names in examples should match the protocol spec (see `docs/protocol-reference.md`)
+- Provider integrations should define the upstream in the top-level `providers` map; tool integrations should show the external tool's verified settings for pointing at Aperture. Grants authorize model access but do not configure either integration.
 - Request/response pairs should be logically consistent (for example, if input has PII, output should show redaction)
 
 ### CONTENT-2: Testing steps are specific
@@ -98,5 +99,5 @@ If a Troubleshooting section exists, verify symptoms are plausible and resolutio
 - Hook ordering: descending `preference`, then alphabetical by hook key. A `block` stops the chain. A `modify` updates the body for subsequent hooks.
 - Grant merging: if the same hook appears in multiple grants, `events` and `send` are merged (union). The hook fires once, not once per grant.
 - Fail policy: `fail_open` (default) skips unreachable hooks; `fail_closed` blocks with HTTP 503. Only affects pre-request hooks; post-response hooks always fail open.
-- Config snippets should show enough to adapt, not reproduce full Aperture configurations. A brief `dst` key warning is sufficient -- contributors do not need to show complete grant structures in both Aperture and tailnet syntax.
+- Config snippets should show enough to adapt, not reproduce full Aperture configurations. A brief location label and `dst` warning are sufficient; contributors do not need to show complete grant structures in both Aperture config-file and tailnet policy syntax.
 - Never use "ACL" terminology. Use "grants" or "tailnet policy file" instead.

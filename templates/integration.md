@@ -39,8 +39,8 @@ tags: []
 
 ## Hook definition
 
-<!-- FOR HOOK INTEGRATIONS ONLY. For provider/tool integrations, replace "Hook definition"
-     and "Grant wiring" with a single "Aperture configuration" section showing grant config.
+<!-- FOR HOOK INTEGRATIONS ONLY. Provider and tool integrations should delete this
+     section, "Grant wiring", and "Hook response format", then keep the matching type-specific branch below.
 
      Show the hook entry for the `hooks` map in the Aperture config file.
      Describe integration-specific field values (for example, the endpoint URL, recommended timeout).
@@ -82,38 +82,90 @@ Add the hook to the `hooks` map in your Aperture config:
 > because the modified body replaces the original request wholesale.
 
 > [!WARNING]
-> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` causes the grant to silently apply to nothing. Refer to the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
+> Config-file grants omit `dst`. Grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) require an explicit `dst` key (for example, `"dst": ["tag:aperture"]`); omitting it causes the grant to silently apply to nothing. Clearly label the location of the complete grant example in your integration. Refer to the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
 
-<!-- FOR PROVIDER AND TOOL INTEGRATIONS: Replace the "Hook definition" and
-     "Grant wiring" sections above with this single section. -->
+<!-- FOR PROVIDER INTEGRATIONS ONLY. Delete the hook sections and the tool branch. -->
 
-## Aperture configuration
+## Aperture provider configuration
 
-<!-- Show the grant configuration for this integration. -->
+<!-- Show the provider entry in Aperture's top-level `providers` map. Use the
+     provider's verified field values: its upstream `baseurl`, credential or
+     authentication fields where applicable, and an array-valued `models` field.
+     The example below illustrates an API-key provider; replace its fields with
+     the fields verified for this provider. -->
+
+```json
+"providers": {
+  "your-provider": {
+    "baseurl": "https://api.provider.example",
+    "apikey": "<PROVIDER_API_KEY>",
+    "models": ["provider-model-id"]
+  }
+}
+```
+
+## Grant access to provider models
+
+<!-- This example is a grant in the Aperture config file, so it omits `dst`.
+     The grant controls access; it does not define the provider. Use the
+     `models` capability field (a string glob), not the provider's array-valued
+     `models` field. Add `send_hooks` only if this integration genuinely also
+     includes a hook. -->
 
 ```json
 "grants": [
   {
     "src": ["group:developers"],
-    "dst": ["tag:aperture"],
     "app": {
-      "tailscale.com/cap/aperture": [{
-        "model": "your-provider/*",
-        "send_hooks": [
-          {
-            "name": "your-hook",
-            "events": ["entire_request"],
-            "send": ["estimated_cost"]
-          }
-        ]
-      }]
+      "tailscale.com/cap/aperture": [
+        { "models": "your-provider/**" }
+      ]
     }
   }
 ]
 ```
 
 > [!WARNING]
-> If you place grants in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants) rather than the Aperture config file, they require an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` causes the grant to silently apply to nothing. Config-file grants do not use `dst`; omit it there. Refer to the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
+> The example above is for the Aperture config file and therefore omits `dst`. If you put the grant in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants), add an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` from a tailnet policy grant causes it to silently apply to nothing. Refer to the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
+
+<!-- FOR TOOL INTEGRATIONS ONLY. Delete the hook sections and the provider branch. -->
+
+## Tool configuration
+
+<!-- Show the external tool's own settings, using the exact setting names verified
+     for that tool. Point its API base URL to Aperture, select the appropriate
+     model, and include a placeholder API key only when the tool requires one.
+     Do not present the conceptual labels below as literal setting names. -->
+
+Conceptual settings (replace these labels with the tool's verified setting names):
+
+```text
+API base URL: https://aperture.example.ts.net
+Model: your-provider/provider-model-id
+Placeholder API key, if required by the tool: <PLACEHOLDER_KEY>
+```
+
+## Grant access to the tool's models
+
+<!-- This example is a grant in the Aperture config file, so it omits `dst`.
+     The grant controls model access; it does not configure the external tool.
+     Add `send_hooks` only if this integration genuinely also includes a hook. -->
+
+```json
+"grants": [
+  {
+    "src": ["group:developers"],
+    "app": {
+      "tailscale.com/cap/aperture": [
+        { "models": "your-provider/**" }
+      ]
+    }
+  }
+]
+```
+
+> [!WARNING]
+> The example above is for the Aperture config file and therefore omits `dst`. If you put the grant in your [tailnet policy file](https://tailscale.com/kb/1337/acl-syntax#grants), add an explicit `dst` key (for example, `"dst": ["tag:aperture"]`). Omitting `dst` from a tailnet policy grant causes it to silently apply to nothing. Refer to the [Aperture configuration reference](https://tailscale.com/docs/aperture/configuration) for grant syntax details.
 
 ## Hook response format
 
@@ -156,7 +208,7 @@ Aperture returns an error to the client; the message is included in the response
 Whatever you return as `request_body` **replaces** what Aperture would have sent to the LLM. Requires `"request_body"` in the grant's `send` list.
 
 > [!NOTE]
-> **Cache impact**: Modifying the current turn's content (the new user message) has no cache impact because the provider has not received it yet. However, modifying historical context (earlier messages already cached by the provider) invalidates the prompt cache (up to 10x cost increase). Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details. If your hook only uses `allow` and `block`, delete this callout.
+> **Cache impact**: Modifying the current turn's content (the new user message) has no cache impact because the provider has not received it yet. However, modifying historical context (earlier messages already cached by the provider) invalidates the prompt cache and can increase estimated costs. Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details. If your hook only uses `allow` and `block`, delete this callout.
 
 ## Verify the integration
 

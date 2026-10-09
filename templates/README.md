@@ -32,7 +32,7 @@ You can use any string value. There is no closed vocabulary. Choose tags that ac
 
 ## Which sections apply to which types
 
-All integration types use the same section structure. The template sections are designed to map directly to the [Tailscale docs integration-guide template](https://tailscale.com/docs/aperture/integrate) so that submissions can be imported with minimal restructuring.
+All integration types use one template with type-specific sections. The template sections are designed to map directly to the [Tailscale docs integration-guide template](https://tailscale.com/docs/aperture/integrate) so that submissions can be imported with minimal restructuring.
 
 ### Required sections (all types)
 
@@ -46,15 +46,33 @@ All integration types use the same section structure. The template sections are 
 
 ### Hook-specific sections
 
-Hook integrations (`pre_request_hook` and `post_response_hook`) use these sections instead of a single "Aperture configuration" section:
+Hook integrations (`pre_request_hook` and `post_response_hook`) use these sections:
 
 | Section | Applies to | Description |
 |---|---|---|
 | **Hook definition** | All hooks | The hook entry in the Aperture config `hooks` map. Describe integration-specific field values and link to the protocol reference for the full field list. |
-| **Grant wiring** | All hooks | The `send_hooks` entry that activates the hook. Include the `dst` key warning callout. |
+| **Grant wiring** | All hooks | The `send_hooks` entry that activates the hook. State whether the grant is in the Aperture config file or the tailnet policy file; config-file grants omit `dst`, while tailnet policy grants require it. |
 | **Hook response format** | Pre-request hooks only | What actions the hook returns (allow, block, modify) with example responses. Include the cache impact note if the hook uses `modify`. Delete this section for post-response hooks. |
 
-For provider/tool integrations, replace these three sections with a single **Aperture configuration** section showing grant configuration.
+### Provider-specific sections
+
+Provider integrations replace the hook-specific sections with:
+
+| Section | Description |
+|---|---|
+| **Aperture provider configuration** | The provider entry in Aperture's top-level `providers` map, including its provider-specific `baseurl`, credential or authentication fields where applicable, and array-valued `models`. |
+| **Grant access to provider models** | A grant that controls access to the configured provider. The grant capability field is `models`, with a string glob value. A grant does not define the provider. |
+
+### Tool-specific sections
+
+Tool integrations replace the hook-specific sections with:
+
+| Section | Description |
+|---|---|
+| **Tool configuration** | The external tool's own verified setting names, with its API base URL pointed at Aperture, its model selected, and a placeholder API key only if the tool requires one. |
+| **Grant access to the tool's models** | A grant that controls access to the models used by the tool. A grant does not configure the external tool. |
+
+For either type, state whether each grant belongs in the Aperture config file or the tailnet policy file. Config-file grants omit `dst`; tailnet policy grants require it. Do not add `send_hooks` unless the integration genuinely also includes a hook.
 
 ### Optional sections (all types)
 

@@ -5,9 +5,8 @@
  * 1. dst key warning: when file has grant examples
  * 2. Cache impact note: when pre_request_hook uses modify action
  *
- * Injection targets are type-aware: hook integrations use the new section
- * names (Grant wiring, Hook response format) while non-hook integrations
- * use the legacy names (Aperture configuration, Important notes).
+ * Injection targets are type-aware for hook, provider, and tool sections,
+ * with legacy section names retained as fallbacks.
  */
 
 import matter from "gray-matter";
@@ -19,7 +18,7 @@ const DST_WARNING = `> [!WARNING]
 
 /** The canonical cache impact callout text from the template. */
 const CACHE_IMPACT_NOTE = `> [!NOTE]
-> **Cache impact**: Modifying the current turn's content (the new user message) has no cache impact because the provider has not received it yet. However, modifying historical context (earlier messages already cached by the provider) invalidates the prompt cache (up to 10x cost increase). Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details. If your hook only uses \`allow\` and \`block\`, delete this callout.`;
+> **Cache impact**: Modifying the current turn's content (the new user message) has no cache impact because the provider has not received it yet. However, modifying historical context (earlier messages already cached by the provider) invalidates the prompt cache and can increase estimated costs. Refer to the [protocol quick reference](../../../../docs/protocol-reference.md#cache-impact-of-request-modification) for details. If your hook only uses \`allow\` and \`block\`, delete this callout.`;
 
 export interface CalloutsResult {
   issues: ValidationIssue[];
@@ -92,6 +91,7 @@ function hasCacheImpactNote(body: string): boolean {
     body.includes("invalidates the LLM provider\u2019s prompt cache") ||
     body.includes("no prompt cache impact") ||
     body.includes("no cache impact") ||
+    body.includes("prompt-cache miss") ||
     body.includes("cache miss (up to 10x cost increase)") ||
     body.includes("cache miss (up to 10x cost") ||
     body.includes("does not affect LLM provider cache behavior")
@@ -169,11 +169,13 @@ function escapeRegex(str: string): string {
  * @param fileContent - Full file content (with frontmatter).
  * @param filePath - Relative path from repo root.
  * @param integrationType - Parsed integration_type from frontmatter.
+ * @param additionalTypes - Parsed additional_types from frontmatter.
  */
 export function validateCallouts(
   fileContent: string,
   filePath: string,
   integrationType: string | undefined,
+  additionalTypes: string[] = [],
 ): CalloutsResult {
   const issues: ValidationIssue[] = [];
   let modified = false;
@@ -181,16 +183,22 @@ export function validateCallouts(
   const parsed = matter(fileContent);
   let body = parsed.content;
 
-  const isHookType =
-    integrationType &&
-    HOOK_TYPES.includes(integrationType as IntegrationType);
+  const types = new Set([integrationType, ...additionalTypes]);
+  const isHookType = [...types].some(
+    (type) => type && HOOK_TYPES.includes(type as IntegrationType),
+  );
 
   // --- dst key warning ---
   if (hasGrantExamples(body) && !hasDstWarning(body)) {
     // Try type-appropriate section first, then fallback to alternatives.
     const dstTargets = isHookType
       ? ["Grant wiring", "Aperture configuration"]
-      : ["Aperture configuration", "Grant wiring"];
+      : [
+          "Grant access to provider models",
+          "Grant access to the tool's models",
+          "Aperture configuration",
+          "Grant wiring",
+        ];
 
     const result = injectAfterFirstMatchingSection(body, dstTargets, DST_WARNING);
     if (result) {
@@ -210,7 +218,7 @@ export function validateCallouts(
   }
 
   // --- Cache impact note ---
-  if (integrationType === "pre_request_hook" && mentionsModifyAction(body)) {
+  if (types.has("pre_request_hook") && mentionsModifyAction(body)) {
     if (!hasCacheImpactNote(body)) {
       const cacheTargets = isHookType
         ? ["Hook response format", "Aperture configuration", "Grant wiring"]
