@@ -88,7 +88,7 @@ provider configuration.
 {
   "grants": [
     {
-    "src": ["group:developers"],
+      "src": ["group:developers"],
       "app": {
         "tailscale.com/cap/aperture": [
           { "role": "user" },

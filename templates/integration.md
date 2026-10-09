@@ -40,7 +40,7 @@ tags: []
 ## Hook definition
 
 <!-- FOR HOOK INTEGRATIONS ONLY. Provider and tool integrations should delete this
-     section and "Grant wiring", then keep the matching type-specific branch below.
+     section, "Grant wiring", and "Hook response format", then keep the matching type-specific branch below.
 
      Show the hook entry for the `hooks` map in the Aperture config file.
      Describe integration-specific field values (for example, the endpoint URL, recommended timeout).
