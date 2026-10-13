@@ -1,7 +1,7 @@
 ---
 name: Highflame
 provider: Highflame
-provider_url: 'https://highflame.ai'
+provider_url: 'https://www.highflame.com'
 integration_type: pre_request_hook
 additional_types:
   - post_response_hook
@@ -13,13 +13,6 @@ tags:
   - policy-enforcement
   - tool-call-monitoring
 ---
-<!-- staleness-banner -->
-> [!WARNING]
-> This integration has been flagged as **stale**: some external links may be broken.
-> Refer to the tracking issue in this repository for details. If you maintain this
-> integration, please open a PR to fix the broken links.
-<!-- /staleness-banner -->
-
 
 # Highflame
 
@@ -27,12 +20,12 @@ tags:
 
 Highflame is a security and observability platform that integrates with Aperture hooks to enforce Shield policies on LLM traffic. It supports two modes through the same endpoint: synchronous `pre_request` enforcement that allows or blocks requests before they reach the provider, and asynchronous post-response observability (`tool_call_entire_request` or `entire_request`) that records completed requests for audit and telemetry. This gives Aperture operators centralized policy enforcement and visibility over LLM usage without modifying client applications. Organizations using Aperture to proxy LLM traffic need a way to apply security policies (prompt injection detection, secrets scanning, content filtering) and to get visibility into tool-call behavior across their fleet. Highflame provides a managed policy engine (Shield) that plugs directly into Aperture's hook system, letting teams start with observation-only policies and graduate to active blocking as confidence grows.
 
-Refer to the [Highflame documentation](https://docs.highflame.ai/integrations/tailscale/setup-guide) for more details on the integration and its capabilities. The rest of this README provides step-by-step setup instructions, configuration guidance, troubleshooting tips, and security considerations for using Highflame with Aperture hooks.
+Refer to the [Highflame integration guide](https://tailscale.com/docs/aperture/integrate/highflame) for more details on the integration and its capabilities. The rest of this README provides step-by-step setup instructions, configuration guidance, troubleshooting tips, and security considerations for using Highflame with Aperture hooks.
 
 ## Prerequisites
 
 - A Tailscale tailnet with [Aperture](https://tailscale.com/docs/aperture) deployed and configured with at least one LLM provider
-- A [Highflame](https://console.highflame.ai/) account with an active project
+- A [Highflame](https://studio.highflame.ai/) account with an active project
 - A Highflame agent or service API key
 - A Shield policy configured for the project
 - Access to the Aperture settings UI at `http://<aperture-host>/ui/`
@@ -41,7 +34,7 @@ Refer to the [Highflame documentation](https://docs.highflame.ai/integrations/ta
 
 1. **Generate a Highflame API key.**
 
-   Log in to the [Highflame Platform](https://console.highflame.ai/). Navigate to **Code Agents > Getting Started** and click the **Tailscale Aperture** card to generate an API key.
+   Log in to the [Highflame Platform](https://studio.highflame.ai/). Navigate to **Code Agents > Getting Started** and click the **Tailscale Aperture** card to generate an API key.
 
    Keep the key secure. You will paste it into the Aperture hook configuration in the next step.
 
@@ -261,10 +254,10 @@ If you do not see expected results:
 ## Maintenance and support
 
 - **Maintainer**: Highflame support team
-- **Contact**: [https://highflame.ai](https://highflame.ai)
+- **Contact**: [https://www.highflame.com](https://www.highflame.com)
 - **Issue reporting**: File issues in this repository for problems with the integration documentation. For Highflame platform issues, contact the Highflame support team.
 
 ## Reference
 
-- [Highflame setup guide for Tailscale Aperture](https://docs.highflame.ai/integrations/tailscale/setup-guide)
+- [Integrate Highflame with Aperture](https://tailscale.com/docs/aperture/integrate/highflame)
 - [Aperture hook configuration reference](https://tailscale.com/docs/aperture/configuration#hooks)
